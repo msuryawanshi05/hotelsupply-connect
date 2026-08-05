@@ -475,7 +475,7 @@ async def match_requirement_async(req_id: uuid.UUID, requirement_dict: dict):
         logger.error(f"Error in async matcher call for requirement {req_id}: {e}")
 
 @app.post("/requirements", response_model=RequirementRead)
-def create_requirement(requirement: RequirementCreate, background_tasks: BackgroundTasks, session: Session = Depends(get_session), user: dict = Depends(require_role("hotel"))):
+def create_requirement(requirement: RequirementCreate, background_tasks: BackgroundTasks, session: Session = Depends(get_session), user: dict = Depends(require_role("hotel", "admin"))):
     db_req = Requirement.model_validate(requirement)
     session.add(db_req)
     session.commit()
@@ -492,7 +492,7 @@ def list_requirements(session: Session = Depends(get_session), user: dict = Depe
     return session.exec(select(Requirement)).all()
 
 @app.patch("/requirements/{id}/accept", response_model=RequirementRead)
-def accept_requirement(id: uuid.UUID, session: Session = Depends(get_session), user: dict = Depends(require_role("supplier"))):
+def accept_requirement(id: uuid.UUID, session: Session = Depends(get_session), user: dict = Depends(require_role("supplier", "admin"))):
     db_req = session.get(Requirement, id)
     if not db_req:
         raise HTTPException(status_code=404, detail="Requirement not found")
@@ -504,7 +504,7 @@ def accept_requirement(id: uuid.UUID, session: Session = Depends(get_session), u
     return db_req
 
 @app.patch("/requirements/{id}/fulfill", response_model=RequirementRead)
-def fulfill_requirement(id: uuid.UUID, session: Session = Depends(get_session), user: dict = Depends(require_role("supplier"))):
+def fulfill_requirement(id: uuid.UUID, session: Session = Depends(get_session), user: dict = Depends(require_role("supplier", "admin"))):
     db_req = session.get(Requirement, id)
     if not db_req:
         raise HTTPException(status_code=404, detail="Requirement not found")
@@ -516,6 +516,7 @@ def fulfill_requirement(id: uuid.UUID, session: Session = Depends(get_session), 
     
     requirements_fulfilled_total.inc()
     return db_req
+
 
 @app.get("/dashboard/summary")
 def dashboard_summary(session: Session = Depends(get_session)):

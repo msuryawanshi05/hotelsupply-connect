@@ -29,7 +29,21 @@
             </div>
             <div class="field">
               <label>Item Name</label>
-              <input id="req-item" class="input" type="text" placeholder="e.g. Eco Shampoo Bottles"/>
+              <input id="req-item" class="input" type="text" list="item-suggestions" placeholder="e.g. Soap Pears or Eco Shampoo"/>
+              <datalist id="item-suggestions">
+                <option value="Soap Pears"></option>
+                <option value="Luxury Soap Bars"></option>
+                <option value="Egyptian Cotton Towel Sets"></option>
+                <option value="Heavy Duty Disinfectant"></option>
+                <option value="Percale Bed Sheet Sets"></option>
+                <option value="Gourmet Espresso Pods"></option>
+                <option value="Organic Herbal Shampoo"></option>
+                <option value="Eco Toilet Paper 3-ply"></option>
+                <option value="Biodegradable Trash Bags"></option>
+                <option value="Nitrile Cleaning Gloves"></option>
+                <option value="Bottled Mineral Water 500ml"></option>
+                <option value="Microfiber Dusting Cloths"></option>
+              </datalist>
             </div>
           </div>
           <div class="field-row">
@@ -49,7 +63,17 @@
           <div class="field-row">
             <div class="field">
               <label>Department</label>
-              <input id="req-dept" class="input" type="text" placeholder="housekeeping"/>
+              <select id="req-dept-select" class="input" onchange="toggleCustomDept()">
+                <option value="housekeeping" selected>Housekeeping</option>
+                <option value="janitorial">Janitorial &amp; Cleaning</option>
+                <option value="food_beverage">Food &amp; Beverage</option>
+                <option value="kitchen">Culinary &amp; Kitchen</option>
+                <option value="dining">Dining &amp; Tableware</option>
+                <option value="maintenance">Engineering &amp; Maintenance</option>
+                <option value="front_desk">Front Desk &amp; Amenities</option>
+                <option value="custom">+ Custom Department...</option>
+              </select>
+              <input id="req-dept-custom" class="input" type="text" placeholder="Type custom department name..." style="display:none;margin-top:6px;"/>
             </div>
             <div class="field">
               <label>Required Deadline</label>
@@ -106,6 +130,18 @@
   renderNav('orders');
 
   let allReqs = [];
+
+  function toggleCustomDept() {
+    const sel = document.getElementById('req-dept-select').value;
+    const cust = document.getElementById('req-dept-custom');
+    if (sel === 'custom') {
+      cust.style.display = 'block';
+      cust.focus();
+    } else {
+      cust.style.display = 'none';
+      cust.value = '';
+    }
+  }
 
   async function initPage() {
     await ensureToken();
@@ -174,7 +210,11 @@
     const item = document.getElementById('req-item').value.trim();
     const quantity = parseInt(document.getElementById('req-qty').value);
     const urgency = document.getElementById('req-urgency').value;
-    const department = document.getElementById('req-dept').value.trim() || 'housekeeping';
+
+    const deptSelect = document.getElementById('req-dept-select').value;
+    const deptCustom = document.getElementById('req-dept-custom').value.trim();
+    const department = (deptSelect === 'custom' ? deptCustom : deptSelect) || 'housekeeping';
+
     const deadline = document.getElementById('req-deadline').value;
 
     if (!hotel_id || !item || !deadline) return toast('Fill out hotel, item, and deadline', 'err');
