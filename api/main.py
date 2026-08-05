@@ -220,10 +220,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static dashboard files
-_static_dir = "/tmp/static"
-os.makedirs(_static_dir, exist_ok=True)
+_static_dir = os.path.join(os.path.dirname(__file__), "static")
+if not os.path.exists(_static_dir):
+    os.makedirs(_static_dir, exist_ok=True)
 app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
 
 Instrumentator().instrument(app).expose(app)
 
