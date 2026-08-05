@@ -5,7 +5,7 @@ from datetime import datetime, date
 from enum import Enum
 from typing import Optional, List
 from contextlib import asynccontextmanager
-
+    
 import httpx
 from fastapi import FastAPI, Depends, HTTPException, status, Form, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordBearer
@@ -220,7 +220,7 @@ app.add_middleware(
 )
 
 # Serve static dashboard files
-_static_dir = os.path.join(os.path.dirname(__file__), "static")
+_static_dir = "/tmp/static"
 os.makedirs(_static_dir, exist_ok=True)
 app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
