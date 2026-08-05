@@ -128,7 +128,7 @@ function renderNav(activePage = 'dashboard') {
   const headerHTML = `
     <header class="header-nav">
       <div class="header-container">
-        <a href="/" class="brand-title">HotelSupply Connect</a>
+        <a href="/" class="brand-title">BtoB HotelSupply Connect</a>
         <nav>
           <ul class="nav-menu">
             ${items.map(i => `
@@ -157,7 +157,8 @@ function renderNav(activePage = 'dashboard') {
   const footerHTML = `
     <footer>
       <div class="footer-container">
-        <div>© 2026 HotelSupply Connect — Event-Driven B2B Procurement Platform</div>
+        <div>© 2026 BtoB HotelSupply Connect — Event-Driven B2B Procurement Platform</div>
+
         <div style="display:flex;gap:16px">
           <a href="/" style="color:var(--color-text-2);text-decoration:none">Home</a>
           <a href="/dashboard" style="color:var(--color-text-2);text-decoration:none">Dashboard</a>
