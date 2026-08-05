@@ -3,28 +3,24 @@ RUN mkdir -p /app/static && chmod -R g+rwX /app/static
 # Ref: Hackathon Security Requirements
 FROM python:3.11-slim
 
-# Create non-root user
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
 WORKDIR /app
 
-# Copy and install dependencies first (layer caching)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
 COPY main.py .
 
-# Change ownership to non-root user
+RUN mkdir -p /app/static && chmod -R g+rwX /app/static
+
 RUN chown -R appuser:appgroup /app
 
-# Switch to non-root user
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8080
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz')" || exit 1
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "info"]
