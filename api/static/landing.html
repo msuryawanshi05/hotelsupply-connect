@@ -177,34 +177,7 @@
       </div>
     </section>
 
-    <!-- Architecture Visualizer -->
-    <section>
-      <div class="view-header">
-        <div class="view-title">Event-Driven Microservice Architecture</div>
-        <div class="view-desc">High-availability pipeline built for OpenShift / Kubernetes</div>
-      </div>
-      <div class="arch-box">
-<span style="color:var(--color-accent-hi)">[Client / Browser]</span>
-       │ HTTPS (TLS)
-       ▼
-<span style="color:#60a5fa">┌─────────────────────────────────────────────────────────────┐</span>
-<span style="color:#60a5fa">│ Ingress / Route (hotelsupply.example.com)                   │</span>
-<span style="color:#60a5fa">└──────────────────────────────┬──────────────────────────────┘</span>
-                               │
-                               ▼
-<span style="color:#4ade80">┌─────────────────────────────────────────────────────────────┐</span>
-<span style="color:#4ade80">│ API Gateway Service (FastAPI + PostgreSQL + SQLModel)       │</span>
-<span style="color:#4ade80">│ 3+ Replicas (HPA 3-10) · JWT RBAC · Prometheus Instrumentator │</span>
-<span style="color:#4ade80">└──────────────┬──────────────────────────────┬───────────────┘</span>
-               │                              │
-               ▼ HTTP (NetworkPolicy)         ▼ HTTP (NetworkPolicy)
-<span style="color:#fb923c">┌─────────────────────────────┐</span>  <span style="color:#a78bfa">┌─────────────────────────────┐</span>
-<span style="color:#fb923c">│ Matcher Function            │</span>  <span style="color:#a78bfa">│ Notifier Function           │</span>
-<span style="color:#fb923c">│ Catalog Scoring Engine      │</span>  <span style="color:#a78bfa">│ JSON Event Dispatcher       │</span>
-<span style="color:#fb923c">│ Knative Scale-to-Zero       │</span>  <span style="color:#a78bfa">│ Simulated Email Dispatch    │</span>
-<span style="color:#fb923c">└─────────────────────────────┘</span>  <span style="color:#a78bfa">└─────────────────────────────┘</span>
-      </div>
-    </section>
+
 
     <!-- Bento Features Grid -->
     <section>

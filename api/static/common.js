@@ -1,8 +1,38 @@
-/* HotelSupply Connect — Common JS Module (Modern Top Navigation) */
+/* HotelSupply Connect — Common JS Module (Themeable Top Navigation) */
 
 const API      = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? window.location.origin : 'http://localhost:8000';
 const MATCHER  = `${API}/proxy/matcher`;
 const NOTIFIER = `${API}/proxy/notifier`;
+
+function getSavedTheme() {
+  return localStorage.getItem('theme') || 'light';
+}
+
+function saveTheme(t) {
+  localStorage.setItem('theme', t);
+  document.documentElement.setAttribute('data-theme', t);
+  updateThemeButtonUI();
+}
+
+function toggleTheme() {
+  const current = getSavedTheme();
+  const next = current === 'dark' ? 'light' : 'dark';
+  saveTheme(next);
+}
+
+function updateThemeButtonUI() {
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) {
+    const isDark = getSavedTheme() === 'dark';
+    btn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
+  }
+}
+
+// Immediately apply saved theme on load to avoid flash
+(function initTheme() {
+  const theme = getSavedTheme();
+  document.documentElement.setAttribute('data-theme', theme);
+})();
 
 function getSavedToken() {
   return localStorage.getItem('jwt_token');
@@ -81,7 +111,7 @@ async function fetchWithTimeout(url, opts = {}, ms = 4000) {
   }
 }
 
-// Render modern top navigation header (No left sidebar, No HS logo box)
+// Render modern top navigation header with Theme Toggle Button
 function renderNav(activePage = 'dashboard') {
   const items = [
     { key: 'landing', label: 'Home', path: '/' },
@@ -92,6 +122,8 @@ function renderNav(activePage = 'dashboard') {
     { key: 'matcher', label: 'Matcher Engine', path: '/matcher-page' },
     { key: 'health', label: 'Health & Security', path: '/health-page' },
   ];
+
+  const isDark = getSavedTheme() === 'dark';
 
   const headerHTML = `
     <header class="header-nav">
@@ -109,6 +141,9 @@ function renderNav(activePage = 'dashboard') {
           </ul>
         </nav>
         <div class="header-actions">
+          <button id="theme-toggle-btn" class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark / Light Mode">
+            ${isDark ? '☀️ Light' : '🌙 Dark'}
+          </button>
           <div class="pill pill-live">Live</div>
           <a href="/profile" class="role-badge" title="Click to manage Auth & Profile">
             <span class="role-dot"></span><span id="user-badge-role">${getSavedRole().toUpperCase()}</span>
