@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>HotelSupply Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+
+/* ── Tokens ── */
+:root{
+  --color-bg:        #09090b;
+  --color-surface:   #0f0f12;
+  --color-surface-2: #18181b;
+  --color-surface-3: #27272a;
+  --color-border:    #27272a;
+  --color-border-2:  #3f3f46;
+  --color-text:      #fafafa;
+  --color-text-2:    #a1a1aa;
+  --color-text-3:    #71717a;
+  --color-accent:    #2563eb;
+  --color-accent-hi: #3b82f6;
+  --color-accent-low:#1d4ed8;
+  --color-green:     #22c55e;
+  --color-yellow:    #eab308;
+  --color-red:       #ef4444;
+  --color-orange:    #f97316;
+
+  --radius-sm: 4px;
+  --radius:    6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --ease-out:  cubic-bezier(.33,1,.68,1);
+  --ease-in-out: cubic-bezier(.645,.045,.355,1);
+
+  --nav-w: 220px;
+  --header-h: 52px;
+  --font-mono: 'Geist Mono',ui-monospace,monospace;
+}
+
+/* ── Base ── */
+body{
+  font-family:'Geist',system-ui,sans-serif;
+  font-size:14px;
+  background:var(--color-bg);
+  color:var(--color-text);
+  line-height:1.5;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── Layout shell ── */
+.shell{display:flex;flex:1;min-height:0}
+.sidebar{
+  width:var(--nav-w);
+  background:var(--color-surface);
+  border-right:1px solid var(--color-border);
+  display:flex;flex-direction:column;
+  flex-shrink:0;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.main-content{flex:1;overflow-y:auto;min-width:0}
+
+/* ── Header ── */
+.topbar{
+  height:var(--header-h);
+  border-bottom:1px solid var(--color-border);
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px;
+  background:var(--color-surface);
+  position:sticky;top:0;z-index:50;
+}
+.topbar-brand{
+  display:flex;align-items:center;gap:8px;
+  font-weight:600;letter-spacing:-.02em;font-size:14px;
+}
+.topbar-mark{
+  width:26px;height:26px;border-radius:var(--radius);
+  background:var(--color-accent);
+  display:grid;place-items:center;
+  font-size:13px;font-weight:700;color:#fff;
+  font-family:var(--font-mono);letter-spacing:-.04em;
+}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:500;letter-spacing:.02em;
+  padding:3px 8px;border-radius:20px;
+  border:1px solid var(--color-border-2);color:var(--color-text-2);
+}
+.pill-live{border-color:rgba(34,197,94,.3);color:var(--color-green)}
+.pill-live::before{content:'';display:block;width:6px;height:6px;border-radius:50%;background:var(--color-green);animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.icon-btn{
+  background:transparent;border:1px solid var(--color-border);
+  color:var(--color-text-2);border-radius:var(--radius);
+  font-family:inherit;font-size:12px;font-weight:500;
+  padding:5px 10px;cursor:pointer;
+  transition:border-color .15s,color .15s;
+}
+.icon-btn:hover{border-color:var(--color-border-2);color:var(--color-text)}
+
+/* ── Sidebar nav ── */
+.sidebar-header{padding:14px 14px 8px;border-bottom:1px solid var(--color-border)}
+.sidebar-logo{font-size:12px;font-weight:600;color:var(--color-text-2);letter-spacing:.06em;text-transform:uppercase}
+.nav-section{padding:8px 8px 0}
+.nav-label{font-size:10px;font-weight:600;color:var(--color-text-3);letter-spacing:.08em;text-transform:uppercase;padding:6px 8px 4px}
+.nav-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;border-radius:var(--radius);
+  font-size:13px;font-weight:500;color:var(--color-text-2);
+  cursor:pointer;transition:background .15s,color .15s;
+  user-select:none;
+}
+.nav-item:hover{background:var(--color-surface-2);color:var(--color-text)}
+.nav-item.active{background:var(--color-surface-3);color:var(--color-text)}
+.nav-item .nav-icon{width:16px;height:16px;opacity:.7;flex-shrink:0}
+.nav-item.active .nav-icon{opacity:1}
+.nav-badge{
+  margin-left:auto;font-size:10px;font-weight:600;
+  font-family:var(--font-mono);color:var(--color-text-3);
+  background:var(--color-surface-3);border-radius:20px;
+  padding:1px 6px;
+}
+.sidebar-footer{margin-top:auto;padding:12px;border-top:1px solid var(--color-border)}
+.auth-row{display:flex;flex-direction:column;gap:6px}
+.auth-label{font-size:10px;font-weight:600;color:var(--color-text-3);text-transform:uppercase;letter-spacing:.06em}
+
+/* ── Panels / Views ── */
+.view{display:none;padding:24px}
+.view.active{display:block}
+.view-header{margin-bottom:20px}
+.view-title{font-size:18px;font-weight:700;letter-spacing:-.02em}
+.view-desc{font-size:13px;color:var(--color-text-2);margin-top:2px}
+
+/* ── KPI Grid ── */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}
+@media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kpi-card{
+  background:var(--color-surface);border:1px solid var(--color-border);
+  border-radius:var(--radius-md);padding:14px 16px;
+  transition:border-color .2s var(--ease-out);
+  position:relative;overflow:hidden;
+}
+.kpi-card:hover{border-color:var(--color-border-2)}
+.kpi-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--kpi-accent,var(--color-accent));opacity:.6;
+}
+.kpi-label{font-size:11px;font-weight:500;color:var(--color-text-2);margin-bottom:6px;font-family:var(--font-mono)}
+.kpi-val{font-size:26px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.kpi-sub{font-size:11px;color:var(--color-text-3);margin-top:4px}
+.progress-track{height:3px;background:var(--color-surface-3);border-radius:2px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;transition:width .6s var(--ease-out);background:var(--color-green)}
+
+/* ── Section card ── */
+.card{
+  background:var(--color-surface);border:1px solid var(--color-border);
+  border-radius:var(--radius-lg);overflow:hidden;
+}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--color-border);
+}
+.card-title{font-size:12px;font-weight:600;color:var(--color-text-2);letter-spacing:.04em;text-transform:uppercase;font-family:var(--font-mono)}
+.card-body{padding:16px}
+
+/* ── Two / Three col grid ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* ── Forms ── */
+.form-stack{display:flex;flex-direction:column;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.field label{font-size:11px;font-weight:500;color:var(--color-text-2)}
+.input{
+  background:var(--color-surface-2);border:1px solid var(--color-border);
+  color:var(--color-text);border-radius:var(--radius);
+  font-family:inherit;font-size:13px;padding:7px 10px;outline:none;
+  transition:border-color .15s var(--ease-out);width:100%;
+}
+.input::placeholder{color:var(--color-text-3)}
+.input:focus{border-color:var(--color-accent);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+select.input{cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2371717a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;
+}
+
+/* ── Buttons ── */
+.btn{
+  font-family:inherit;font-size:13px;font-weight:600;border:none;
+  border-radius:var(--radius);cursor:pointer;padding:7px 14px;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  transition:all .15s var(--ease-out);
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{
+  background:var(--color-accent);color:#fff;
+  box-shadow:0 1px 2px rgba(0,0,0,.3);
+}
+.btn-primary:hover{background:var(--color-accent-hi);box-shadow:0 2px 8px rgba(37,99,235,.4)}
+.btn-secondary{
+  background:var(--color-surface-3);color:var(--color-text);
+  border:1px solid var(--color-border-2);
+}
+.btn-secondary:hover{background:var(--color-border-2)}
+.btn-ghost{background:transparent;color:var(--color-text-2);border:1px solid var(--color-border)}
+.btn-ghost:hover{color:var(--color-text);border-color:var(--color-border-2);background:var(--color-surface-2)}
+.btn-danger{background:rgba(239,68,68,.1);color:var(--color-red);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-success{background:rgba(34,197,94,.1);color:var(--color-green);border:1px solid rgba(34,197,94,.2)}
+.btn-success:hover{background:rgba(34,197,94,.2)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-full{width:100%}
+.btn[disabled]{opacity:.4;cursor:not-allowed;pointer-events:none}
+
+/* ── Table ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{
+  font-size:11px;font-weight:600;color:var(--color-text-3);text-transform:uppercase;
+  letter-spacing:.06em;font-family:var(--font-mono);
+  padding:10px 14px;text-align:left;border-bottom:1px solid var(--color-border);
+  white-space:nowrap;
+}
+tbody td{
+  padding:11px 14px;border-bottom:1px solid rgba(39,39,42,.7);
+  vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .1s}
+tbody tr:hover td{background:var(--color-surface-2)}
+
+/* ── Badges ── */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:600;font-family:var(--font-mono);
+  padding:2px 7px;border-radius:4px;border:1px solid;
+  white-space:nowrap;
+}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge-open    {color:#a1a1aa;border-color:rgba(161,161,170,.25);background:rgba(161,161,170,.08)}
+.badge-matched {color:#60a5fa;border-color:rgba(96,165,250,.25);background:rgba(96,165,250,.08)}
+.badge-accepted{color:#fb923c;border-color:rgba(251,146,60,.25);background:rgba(251,146,60,.08)}
+.badge-fulfilled{color:#4ade80;border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.08)}
+.badge-up  {color:var(--color-green);border-color:rgba(34,197,94,.25);background:rgba(34,197,94,.08)}
+.badge-down{color:var(--color-red);border-color:rgba(239,68,68,.25);background:rgba(239,68,68,.08)}
+
+/* ── Urgency ── */
+.urg{font-size:11px;font-weight:700;font-family:var(--font-mono);letter-spacing:.04em}
+.urg-high   {color:var(--color-red)}
+.urg-medium {color:var(--color-yellow)}
+.urg-low    {color:var(--color-green)}
+
+/* ── Monospace cell ── */
+.mono{font-family:var(--font-mono);font-size:11px;color:var(--color-text-3)}
+
+/* ── Action buttons in table ── */
+.action-cell{display:flex;gap:4px;align-items:center}
+
+/* ── Event log ── */
+.event-list{display:flex;flex-direction:column;gap:1px}
+.event-row{
+  display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;
+  padding:10px 14px;border-bottom:1px solid rgba(39,39,42,.5);
+  transition:background .1s;
+}
+.event-row:last-child{border-bottom:none}
+.event-row:hover{background:var(--color-surface-2)}
+.event-dot{width:7px;height:7px;border-radius:50%;background:var(--color-accent);margin-top:5px;flex-shrink:0}
+.event-name{font-size:12px;font-weight:600;color:var(--color-text)}
+.event-meta{font-size:11px;color:var(--color-text-3);font-family:var(--font-mono);margin-top:2px}
+.event-time{font-size:11px;color:var(--color-text-3);font-family:var(--font-mono);white-space:nowrap}
+
+/* ── Terminal / Code ── */
+.terminal{
+  background:#000;border:1px solid var(--color-border);border-radius:var(--radius-md);
+  padding:12px 14px;font-family:var(--font-mono);font-size:12px;line-height:1.7;
+  max-height:180px;overflow-y:auto;color:#a1a1aa;
+}
+.t-ok  {color:#4ade80}
+.t-hi  {color:#60a5fa}
+.t-warn{color:#fbbf24}
+.t-err {color:#f87171}
+.t-dim {color:#52525b}
+
+/* ── Health grid ── */
+.health-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.health-card{
+  background:var(--color-surface-2);border:1px solid var(--color-border);
+  border-radius:var(--radius-md);padding:12px 14px;
+}
+.health-name{font-size:11px;font-weight:600;font-family:var(--font-mono);color:var(--color-text-2);margin-bottom:6px}
+.health-status{display:flex;align-items:center;gap:6px}
+.health-indicator{
+  width:8px;height:8px;border-radius:50%;background:var(--color-surface-3);
+  transition:background .3s;
+}
+.health-indicator.up{background:var(--color-green);box-shadow:0 0 6px rgba(34,197,94,.5)}
+.health-indicator.down{background:var(--color-red)}
+.health-text{font-size:12px;font-weight:600}
+
+/* ── Divider ── */
+.divider{height:1px;background:var(--color-border);margin:16px 0}
+
+/* ── Toast ── */
+#toast-root{
+  position:fixed;bottom:20px;right:20px;z-index:200;
+  display:flex;flex-direction:column;gap:6px;align-items:flex-end;
+  pointer-events:none;
+}
+.toast{
+  background:var(--color-surface-2);border:1px solid var(--color-border-2);
+  border-radius:var(--radius-md);padding:10px 14px;
+  font-size:13px;font-weight:500;max-width:300px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  display:flex;align-items:center;gap:8px;
+  animation:slideUp .2s var(--ease-out) both, fadeOut .3s 2.8s var(--ease-in-out) both;
+  pointer-events:auto;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fadeOut{to{opacity:0;transform:translateY(-4px)}}
+.toast-ok  {border-color:rgba(74,222,128,.3)}
+.toast-err {border-color:rgba(248,113,113,.3)}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.toast-ok  .toast-dot{background:var(--color-green)}
+.toast-err .toast-dot{background:var(--color-red)}
+
+/* ── Spinner ── */
+.spin{
+  display:inline-block;width:12px;height:12px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.12);border-top-color:var(--color-accent);
+  animation:rot .6s linear infinite;
+}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ── Empty state ── */
+.empty{
+  padding:32px 16px;text-align:center;
+  color:var(--color-text-3);font-size:13px;
+}
+.empty-title{font-size:14px;font-weight:600;color:var(--color-text-2);margin-bottom:4px}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--color-border-2);border-radius:2px}
+
+/* ── Separator line ── */
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:8px;align-items:flex-end}
+
+/* ── Sidebar auth section ── */
+.auth-section{
+  background:var(--color-surface-2);border:1px solid var(--color-border);
+  border-radius:var(--radius-md);padding:10px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.auth-status{
+  font-size:11px;font-weight:500;font-family:var(--font-mono);
+  padding:4px 8px;border-radius:var(--radius);background:var(--color-surface-3);
+  color:var(--color-text-3);word-break:break-all;
+}
+.auth-status.ok{color:var(--color-green)}
+.auth-status.err{color:var(--color-red)}
+
+/* ── Refresh indicator ── */
+.refresh-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-3)}
+.refresh-label{font-family:var(--font-mono)}
+
+/* ── Tab strip ── */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--color-border);margin-bottom:16px}
+.tab-btn{
+  font-family:inherit;font-size:12px;font-weight:500;
+  padding:8px 14px;border:none;background:transparent;cursor:pointer;
+  color:var(--color-text-3);border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color .15s,border-color .15s;
+}
+.tab-btn.active{color:var(--color-text);border-bottom-color:var(--color-accent)}
+.tab-btn:hover{color:var(--color-text-2)}
+
+/* ── Number input tweak ── */
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-mark">HS</div>
+    HotelSupply Connect
+  </div>
+  <div class="topbar-right">
+    <div class="pill pill-live">Live</div>
+    <div class="pill" id="refresh-badge">5s</div>
+    <a href="/docs" target="_blank"><button class="icon-btn">API Docs ↗</button></a>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Workspace</div>
+      <div class="nav-item active" data-view="dashboard" onclick="switchView('dashboard',this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" data-view="requirements" onclick="switchView('requirements',this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Requirements
+        <span class="nav-badge" id="nav-req-count">—</span>
+      </div>
+      <div class="nav-item" data-view="entities" onclick="switchView('entities',this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3M9 7h1m4 0h1M9 11h1m4 0h1M9 15h1m4 0h1"/></svg>
+        Hotels &amp; Suppliers
+      </div>
+      <div class="nav-item" data-view="events" onclick="switchView('events',this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        Events
+        <span class="nav-badge" id="nav-evt-count">—</span>
+      </div>
+      <div class="nav-item" data-view="matcher" onclick="switchView('matcher',this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Matcher
+      </div>
+    </div>
+
+    <div class="nav-section" style="margin-top:8px">
+      <div class="nav-label">Monitoring</div>
+      <div class="nav-item" data-view="health" onclick="switchView('health',this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        Health
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="auth-label" style="font-size:10px;font-weight:600;color:var(--color-text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Authentication</div>
+      <div class="auth-section">
+        <div class="field">
+          <label>Role</label>
+          <select id="role-select" class="input" style="font-size:12px;padding:5px 28px 5px 8px">
+            <option value="admin">admin</option>
+            <option value="hotel">hotel</option>
+            <option value="supplier">supplier</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Username</label>
+          <input id="auth-username" class="input" type="text" value="admin1" style="font-size:12px;padding:5px 8px;font-family:var(--font-mono)"/>
+        </div>
+        <button class="btn btn-primary btn-full btn-sm" onclick="getToken()">Get Token</button>
+        <div class="auth-status" id="token-status">No token</div>
+      </div>
+      <div class="refresh-row" style="margin-top:8px">
+        <span class="refresh-label">Refresh</span>
+        <select id="refresh-interval" class="input" style="font-size:11px;padding:3px 24px 3px 6px;flex:1;max-width:70px" onchange="setAutoRefresh()">
+          <option value="3000">3s</option>
+          <option value="5000" selected>5s</option>
+          <option value="10000">10s</option>
+          <option value="0">Off</option>
+        </select>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content area -->
+  <div class="main-content">
+
+    <!-- ── Dashboard View ── -->
+    <div id="view-dashboard" class="view active">
+      <div class="view-header">
+        <div class="view-title">Overview</div>
+        <div class="view-desc">Real-time procurement pipeline status</div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi-card" style="--kpi-accent:var(--color-text-3)">
+          <div class="kpi-label">TOTAL</div>
+          <div class="kpi-val" id="kpi-total">—</div>
+          <div class="kpi-sub">requirements</div>
+        </div>
+        <div class="kpi-card" style="--kpi-accent:#71717a">
+          <div class="kpi-label">OPEN</div>
+          <div class="kpi-val" id="kpi-open">—</div>
+          <div class="kpi-sub">awaiting match</div>
+        </div>
+        <div class="kpi-card" style="--kpi-accent:var(--color-accent)">
+          <div class="kpi-label">MATCHED</div>
+          <div class="kpi-val" id="kpi-matched">—</div>
+          <div class="kpi-sub">supplier found</div>
+        </div>
+        <div class="kpi-card" style="--kpi-accent:var(--color-orange)">
+          <div class="kpi-label">ACCEPTED</div>
+          <div class="kpi-val" id="kpi-accepted">—</div>
+          <div class="kpi-sub">in progress</div>
+        </div>
+        <div class="kpi-card" style="--kpi-accent:var(--color-green)">
+          <div class="kpi-label">FULFILLED</div>
+          <div class="kpi-val" id="kpi-fulfilled">—</div>
+          <div class="kpi-sub">completed</div>
+        </div>
+        <div class="kpi-card" style="--kpi-accent:var(--color-green)">
+          <div class="kpi-label">SLA RATE</div>
+          <div class="kpi-val" id="kpi-rate">—</div>
+          <div class="kpi-sub">fulfillment %</div>
+          <div class="progress-track"><div class="progress-fill" id="kpi-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- Recent requirements + events side by side -->
+      <div class="grid-2" style="gap:12px">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Recent Requirements</span>
+            <button class="btn btn-ghost btn-sm" onclick="switchView('requirements',document.querySelector('[data-view=requirements]'))">View all →</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Item</th><th>Qty</th><th>Urgency</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="dashboard-req-tbody"><tr><td colspan="5"><div class="empty"><span class="spin"></span></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Notification Events</span>
+            <button class="btn btn-ghost btn-sm" onclick="switchView('events',document.querySelector('[data-view=events]'))">View all →</button>
+          </div>
+          <div id="dashboard-events" style="max-height:300px;overflow-y:auto">
+            <div class="empty"><span class="spin"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Requirements View ── -->
+    <div id="view-requirements" class="view">
+      <div class="view-header">
+        <div class="view-title">Requirements</div>
+        <div class="view-desc">Post and manage supply requirements across the lifecycle</div>
+      </div>
+
+      <!-- Post form -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-head"><span class="card-title">Post Requirement</span></div>
+        <div class="card-body">
+          <div class="stack">
+            <div class="field-row">
+              <div class="field">
+                <label>Hotel</label>
+                <select id="req-hotel-id" class="input"><option value="">— select hotel —</option></select>
+              </div>
+              <div class="field">
+                <label>Item</label>
+                <input id="req-item" class="input" type="text" placeholder="e.g. soap bars"/>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Quantity</label>
+                <input id="req-qty" class="input" type="number" value="500" min="1"/>
+              </div>
+              <div class="field">
+                <label>Urgency</label>
+                <select id="req-urgency" class="input">
+                  <option value="high">high</option>
+                  <option value="medium">medium</option>
+                  <option value="low">low</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Department</label>
+                <input id="req-dept" class="input" type="text" placeholder="housekeeping"/>
+              </div>
+              <div class="field">
+                <label>Deadline</label>
+                <input id="req-deadline" class="input" type="date"/>
+              </div>
+            </div>
+            <div>
+              <button id="post-req-btn" class="btn btn-primary" onclick="postRequirement()">Post &amp; match</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requirements table -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">All Requirements</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadRequirements()">Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Item</th><th>Qty</th><th>Urgency</th><th>Dept</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="req-tbody"><tr><td colspan="8"><div class="empty"><span class="spin"></span></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Hotels & Suppliers View ── -->
+    <div id="view-entities" class="view">
+      <div class="view-header">
+        <div class="view-title">Hotels &amp; Suppliers</div>
+        <div class="view-desc">Register procurement participants</div>
+      </div>
+
+      <div class="grid-2" style="gap:12px">
+        <!-- Hotels -->
+        <div class="stack">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Register Hotel</span></div>
+            <div class="card-body">
+              <div class="stack">
+                <div class="field">
+                  <label>Hotel name</label>
+                  <input id="hotel-name" class="input" type="text" placeholder="Grand Hyatt Mumbai"/>
+                </div>
+                <div class="field">
+                  <label>Contact email</label>
+                  <input id="hotel-email" class="input" type="email" placeholder="ops@hotel.com"/>
+                </div>
+                <button class="btn btn-primary" onclick="createHotel()">Register hotel</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Hotels</span><button class="btn btn-ghost btn-sm" onclick="loadHotelTable()">Refresh</button></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Name</th><th>Email</th><th>Created</th></tr></thead>
+                <tbody id="hotel-tbody"><tr><td colspan="3"><div class="empty"><span class="spin"></span></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Suppliers -->
+        <div class="stack">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Register Supplier</span></div>
+            <div class="card-body">
+              <div class="stack">
+                <div class="field">
+                  <label>Supplier name</label>
+                  <input id="supplier-name" class="input" type="text" placeholder="CleanPro Supplies"/>
+                </div>
+                <div class="field">
+                  <label>Contact email</label>
+                  <input id="supplier-email" class="input" type="email" placeholder="sales@supplier.com"/>
+                </div>
+                <div class="field">
+                  <label>Catalog items <span style="color:var(--color-text-3)">(comma-separated)</span></label>
+                  <input id="supplier-catalog" class="input" type="text" placeholder="soap, towels, shampoo"/>
+                </div>
+                <button class="btn btn-primary" onclick="createSupplier()">Register supplier</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Suppliers</span><button class="btn btn-ghost btn-sm" onclick="loadSupplierTable()">Refresh</button></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Name</th><th>Catalog</th><th>Created</th></tr></thead>
+                <tbody id="supplier-tbody"><tr><td colspan="3"><div class="empty"><span class="spin"></span></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Events View ── -->
+    <div id="view-events" class="view">
+      <div class="view-header">
+        <div class="view-title">Notification Events</div>
+        <div class="view-desc">Real-time supplier notification log from the notifier service</div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Event Log</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadNotifications()">Refresh</button>
+        </div>
+        <div class="event-list" id="event-log" style="max-height:600px;overflow-y:auto">
+          <div class="empty"><span class="spin"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Matcher View ── -->
+    <div id="view-matcher" class="view">
+      <div class="view-header">
+        <div class="view-title">Matcher</div>
+        <div class="view-desc">Test the scoring engine directly against the supplier catalog</div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Test Parameters</span></div>
+          <div class="card-body">
+            <div class="stack">
+              <div class="field">
+                <label>Item to match</label>
+                <input id="match-item" class="input" type="text" placeholder="soap"/>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Quantity</label>
+                  <input id="match-qty" class="input" type="number" value="200" min="1"/>
+                </div>
+                <div class="field">
+                  <label>Urgency</label>
+                  <select id="match-urgency" class="input">
+                    <option value="high">high</option>
+                    <option value="medium">medium</option>
+                    <option value="low">low</option>
+                  </select>
+                </div>
+              </div>
+              <button id="match-btn" class="btn btn-primary btn-full" onclick="testMatcher()">Run matcher</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">Results</span></div>
+          <div class="card-body">
+            <div class="terminal" id="match-result"><span class="t-dim">// Run the matcher to see results</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catalog reference -->
+      <div class="card" style="margin-top:12px">
+        <div class="card-head"><span class="card-title">Demo Catalog Reference</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Supplier</th><th>Items</th><th>Min Qty</th><th>Lead Time</th><th>Reliability</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">sup-001</td><td>soap, shampoo, conditioner, body wash, hand sanitizer</td><td class="mono">100</td><td class="mono">2d</td><td><span class="t-ok" style="font-family:var(--font-mono);font-size:12px">0.95</span></td></tr>
+              <tr><td class="mono">sup-002</td><td>towels, bed sheets, pillowcases, blankets, bathrobes</td><td class="mono">50</td><td class="mono">3d</td><td><span class="t-ok" style="font-family:var(--font-mono);font-size:12px">0.92</span></td></tr>
+              <tr><td class="mono">sup-003</td><td>soap, towels, toilet paper, tissue boxes, cleaning spray, mop heads</td><td class="mono">200</td><td class="mono">1d</td><td><span style="color:var(--color-yellow);font-family:var(--font-mono);font-size:12px">0.88</span></td></tr>
+              <tr><td class="mono">sup-004</td><td>cleaning spray, disinfectant, floor cleaner, glass cleaner, gloves</td><td class="mono">50</td><td class="mono">2d</td><td><span class="t-ok" style="font-family:var(--font-mono);font-size:12px">0.90</span></td></tr>
+              <tr><td class="mono">sup-005</td><td>soap, shampoo, towels, bed sheets, coffee pods, tea bags</td><td class="mono">100</td><td class="mono">2d</td><td><span class="t-ok" style="font-family:var(--font-mono);font-size:12px">0.93</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Health View ── -->
+    <div id="view-health" class="view">
+      <div class="view-header">
+        <div class="view-title">Service Health</div>
+        <div class="view-desc">Live health checks across all three services</div>
+      </div>
+      <div class="health-grid" style="margin-bottom:12px">
+        <div class="health-card" id="health-api">
+          <div class="health-name">API :8000</div>
+          <div class="health-status"><div class="health-indicator" id="hi-api"></div><span class="health-text" id="ht-api">—</span></div>
+          <div style="margin-top:6px;font-size:11px;color:var(--color-text-3);font-family:var(--font-mono)" id="hd-api"></div>
+        </div>
+        <div class="health-card" id="health-matcher">
+          <div class="health-name">Matcher :8001</div>
+          <div class="health-status"><div class="health-indicator" id="hi-matcher"></div><span class="health-text" id="ht-matcher">—</span></div>
+          <div style="margin-top:6px;font-size:11px;color:var(--color-text-3);font-family:var(--font-mono)" id="hd-matcher"></div>
+        </div>
+        <div class="health-card" id="health-notifier">
+          <div class="health-name">Notifier :8002</div>
+          <div class="health-status"><div class="health-indicator" id="hi-notifier"></div><span class="health-text" id="ht-notifier">—</span></div>
+          <div style="margin-top:6px;font-size:11px;color:var(--color-text-3);font-family:var(--font-mono)" id="hd-notifier"></div>
+        </div>
+      </div>
+
+      <!-- Probe endpoints detail -->
+      <div class="card">
+        <div class="card-head"><span class="card-title">Probe Endpoints</span><button class="btn btn-ghost btn-sm" onclick="loadHealth()">Refresh</button></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Service</th><th>Probe</th><th>Endpoint</th><th>Status</th><th>Response</th></tr></thead>
+            <tbody id="probe-tbody">
+              <tr><td colspan="5"><div class="empty"><span class="spin"></span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RBAC demo -->
+      <div class="card" style="margin-top:12px">
+        <div class="card-head"><span class="card-title">RBAC Test</span></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--color-text-2);margin-bottom:12px">Attempt a cross-role access violation. A hotel token trying to create a supplier should be blocked with 403.</p>
+          <button class="btn btn-danger" onclick="testRBACViolation()">Trigger RBAC violation</button>
+          <div class="terminal" id="rbac-result" style="margin-top:12px;min-height:48px"><span class="t-dim">// Result appears here</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+</div><!-- end shell -->
+
+<div id="toast-root"></div>
+
+<script>
+'use strict';
+const API      = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? window.location.origin : 'http://localhost:8000';
+const MATCHER  = `${API}/proxy/matcher`;
+const NOTIFIER = `${API}/proxy/notifier`;
+let TOKEN = null;
+let refreshTimer = null;
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function switchView(name, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  // Trigger relevant load on view switch
+  const loaders = {
+    dashboard: () => { loadDashboard(); loadRequirementsMini(); loadNotificationsMini(); },
+    requirements: () => { loadRequirements(); loadHotelsDropdown(); },
+    entities: () => { loadHotelTable(); loadSupplierTable(); },
+    events: loadNotifications,
+    matcher: () => {},
+    health: () => { loadHealth(); loadProbes(); },
+  };
+  loaders[name]?.();
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'ok') {
+  const root = document.getElementById('toast-root');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span class="toast-dot"></span>${msg}`;
+  root.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+async function getToken() {
+  const role = document.getElementById('role-select').value;
+  const username = document.getElementById('auth-username').value.trim() || role + '1';
+  const el = document.getElementById('token-status');
+  el.textContent = 'Fetching…'; el.className = 'auth-status';
+  try {
+    const body = new URLSearchParams({ username, role, password: 'demo123' });
+    const r = await fetch(`${API}/auth/token`, { method: 'POST', body });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Auth failed');
+    TOKEN = d.access_token;
+    el.textContent = `${role} · active`; el.className = 'auth-status ok';
+    toast(`Authenticated as ${role}`);
+    loadHotelsDropdown();
+  } catch(e) {
+    el.textContent = e.message; el.className = 'auth-status err';
+    toast(e.message, 'err');
+  }
+}
+
+function authHeaders(json = true) {
+  const h = {};
+  if (TOKEN) h['Authorization'] = `Bearer ${TOKEN}`;
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const r = await fetch(`${API}/dashboard/summary`);
+    const d = await r.json();
+    document.getElementById('kpi-total').textContent    = d.total;
+    document.getElementById('kpi-open').textContent     = d.open;
+    document.getElementById('kpi-matched').textContent  = d.matched;
+    document.getElementById('kpi-accepted').textContent = d.accepted;
+    document.getElementById('kpi-fulfilled').textContent= d.fulfilled;
+    const pct = Math.round((d.fulfillment_rate || 0) * 100);
+    document.getElementById('kpi-rate').textContent = pct + '%';
+    document.getElementById('kpi-bar').style.width = pct + '%';
+    document.getElementById('nav-req-count').textContent = d.total;
+  } catch(e) {}
+}
+
+// ── Requirements ─────────────────────────────────────────────────────────────
+function reqRowHTML(req, mini = false) {
+  const statusBadge = `<span class="badge badge-${req.status}">${req.status}</span>`;
+  const urgency = `<span class="urg urg-${req.urgency}">${req.urgency}</span>`;
+  const actions = req.status === 'matched'
+    ? `<button class="btn btn-success btn-sm" onclick="acceptReq('${req.id}')">Accept</button>`
+    : req.status === 'accepted'
+    ? `<button class="btn btn-primary btn-sm" onclick="fulfillReq('${req.id}')">Fulfill</button>`
+    : `<span class="mono">—</span>`;
+
+  if (mini) {
+    return `<tr>
+      <td><span style="font-weight:600">${req.item}</span></td>
+      <td class="mono">${req.quantity.toLocaleString()}</td>
+      <td>${urgency}</td>
+      <td>${statusBadge}</td>
+      <td class="action-cell">${actions}</td>
+    </tr>`;
+  }
+  const idShort = req.id.substring(0, 8);
+  const deadline = req.deadline ? req.deadline.toString().split('T')[0] : '—';
+  return `<tr>
+    <td class="mono">${idShort}</td>
+    <td><span style="font-weight:500">${req.item}</span></td>
+    <td class="mono">${req.quantity.toLocaleString()}</td>
+    <td>${urgency}</td>
+    <td class="mono">${req.department || '—'}</td>
+    <td class="mono">${deadline}</td>
+    <td>${statusBadge}</td>
+    <td class="action-cell">${actions}</td>
+  </tr>`;
+}
+
+async function loadRequirements() {
+  const tbody = document.getElementById('req-tbody');
+  if (!TOKEN) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-title">No token</div>Authenticate via sidebar to view requirements</div></td></tr>`; return; }
+  try {
+    const r = await fetch(`${API}/requirements`, { headers: authHeaders(false) });
+    if (!r.ok) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty">Auth error — check token role</div></td></tr>`; return; }
+    const reqs = await r.json();
+    if (!reqs.length) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-title">No requirements yet</div>Post one using the form above</div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = reqs.slice().reverse().map(r => reqRowHTML(r)).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty">Error: ${e.message}</div></td></tr>`;
+  }
+}
+
+async function loadRequirementsMini() {
+  const tbody = document.getElementById('dashboard-req-tbody');
+  if (!TOKEN) { tbody.innerHTML = `<tr><td colspan="5"><div class="empty">Authenticate to view</div></td></tr>`; return; }
+  try {
+    const r = await fetch(`${API}/requirements`, { headers: authHeaders(false) });
+    if (!r.ok) { tbody.innerHTML = `<tr><td colspan="5"><div class="empty">Auth error</div></td></tr>`; return; }
+    const reqs = await r.json();
+    if (!reqs.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty">No requirements yet</div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = reqs.slice().reverse().slice(0, 8).map(r => reqRowHTML(r, true)).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="5"><div class="empty">Error</div></td></tr>`; }
+}
+
+async function postRequirement() {
+  const hotel_id   = document.getElementById('req-hotel-id').value;
+  const item       = document.getElementById('req-item').value.trim();
+  const quantity   = parseInt(document.getElementById('req-qty').value);
+  const urgency    = document.getElementById('req-urgency').value;
+  const department = document.getElementById('req-dept').value.trim() || 'general';
+  const deadline   = document.getElementById('req-deadline').value;
+
+  if (!hotel_id) return toast('Select a hotel first', 'err');
+  if (!item)     return toast('Enter the item name', 'err');
+  if (!deadline) return toast('Set a deadline', 'err');
+
+  const btn = document.getElementById('post-req-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Posting…';
+  try {
+    const r = await fetch(`${API}/requirements`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotel_id, item, quantity, urgency, department, deadline })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Failed to post');
+    toast(`Requirement posted — matcher running…`);
+    // Reload after matcher background task fires (~2s)
+    setTimeout(() => { loadRequirements(); loadRequirementsMini(); loadDashboard(); loadNotificationsMini(); }, 2500);
+  } catch(e) { toast(e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = 'Post & match'; }
+}
+
+async function acceptReq(id) {
+  try {
+    const r = await fetch(`${API}/requirements/${id}/accept`, { method: 'PATCH', headers: authHeaders(false) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail);
+    toast('Requirement accepted');
+    loadRequirements(); loadRequirementsMini(); loadDashboard();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function fulfillReq(id) {
+  try {
+    const r = await fetch(`${API}/requirements/${id}/fulfill`, { method: 'PATCH', headers: authHeaders(false) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail);
+    toast('Requirement fulfilled');
+    loadRequirements(); loadRequirementsMini(); loadDashboard();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Hotels ───────────────────────────────────────────────────────────────────
+async function loadHotelsDropdown() {
+  if (!TOKEN) return;
+  try {
+    const r = await fetch(`${API}/hotels`, { headers: authHeaders(false) });
+    if (!r.ok) return;
+    const hotels = await r.json();
+    const sel = document.getElementById('req-hotel-id');
+    sel.innerHTML = '<option value="">— select hotel —</option>' +
+      hotels.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
+  } catch(e) {}
+}
+
+async function createHotel() {
+  const name  = document.getElementById('hotel-name').value.trim();
+  const email = document.getElementById('hotel-email').value.trim();
+  if (!name || !email) return toast('Hotel name and email are required', 'err');
+  try {
+    const r = await fetch(`${API}/hotels`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name, contact_email: email }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail);
+    toast(`Hotel "${d.name}" registered`);
+    document.getElementById('hotel-name').value = '';
+    document.getElementById('hotel-email').value = '';
+    loadHotelTable(); loadHotelsDropdown();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function loadHotelTable() {
+  const tbody = document.getElementById('hotel-tbody');
+  if (!TOKEN) { tbody.innerHTML = `<tr><td colspan="3"><div class="empty">Authenticate first</div></td></tr>`; return; }
+  try {
+    const r = await fetch(`${API}/hotels`, { headers: authHeaders(false) });
+    const hotels = await r.json();
+    if (!hotels.length) { tbody.innerHTML = `<tr><td colspan="3"><div class="empty">No hotels registered</div></td></tr>`; return; }
+    tbody.innerHTML = hotels.map(h => `<tr>
+      <td style="font-weight:500">${h.name}</td>
+      <td class="mono">${h.contact_email}</td>
+      <td class="mono">${h.created_at.split('T')[0]}</td>
+    </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="3"><div class="empty">Error</div></td></tr>`; }
+}
+
+// ── Suppliers ─────────────────────────────────────────────────────────────────
+async function createSupplier() {
+  const name    = document.getElementById('supplier-name').value.trim();
+  const email   = document.getElementById('supplier-email').value.trim();
+  const catalog = document.getElementById('supplier-catalog').value.trim();
+  if (!name || !email || !catalog) return toast('All supplier fields required', 'err');
+  try {
+    const r = await fetch(`${API}/suppliers`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name, contact_email: email, catalog_items: catalog }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail);
+    toast(`Supplier "${d.name}" registered`);
+    document.getElementById('supplier-name').value = '';
+    document.getElementById('supplier-email').value = '';
+    document.getElementById('supplier-catalog').value = '';
+    loadSupplierTable();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function loadSupplierTable() {
+  const tbody = document.getElementById('supplier-tbody');
+  if (!TOKEN) { tbody.innerHTML = `<tr><td colspan="3"><div class="empty">Authenticate first</div></td></tr>`; return; }
+  try {
+    const r = await fetch(`${API}/suppliers`, { headers: authHeaders(false) });
+    const suppliers = await r.json();
+    if (!suppliers.length) { tbody.innerHTML = `<tr><td colspan="3"><div class="empty">No suppliers registered</div></td></tr>`; return; }
+    tbody.innerHTML = suppliers.map(s => `<tr>
+      <td style="font-weight:500">${s.name}</td>
+      <td class="mono" style="font-size:11px">${s.catalog_items}</td>
+      <td class="mono">${s.created_at.split('T')[0]}</td>
+    </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="3"><div class="empty">Error</div></td></tr>`; }
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+function eventRowHTML(e) {
+  const time = new Date(e.timestamp).toLocaleTimeString();
+  return `<div class="event-row">
+    <div class="event-dot"></div>
+    <div>
+      <div class="event-name">${e.supplier_name}</div>
+      <div class="event-meta">${e.item} · qty ${e.quantity} · <span class="urg urg-${e.urgency}">${e.urgency}</span></div>
+    </div>
+    <div class="event-time">${time}</div>
+  </div>`;
+}
+
+async function loadNotifications() {
+  const log = document.getElementById('event-log');
+  try {
+    const r = await fetch(`${NOTIFIER}/notifications`);
+    const events = await r.json();
+    document.getElementById('nav-evt-count').textContent = events.length;
+    if (!events.length) {
+      log.innerHTML = `<div class="empty"><div class="empty-title">No events yet</div>Post a requirement to trigger the pipeline</div>`;
+      return;
+    }
+    log.innerHTML = events.map(eventRowHTML).join('');
+  } catch(e) {
+    log.innerHTML = `<div class="empty">Notifier unreachable</div>`;
+  }
+}
+
+async function loadNotificationsMini() {
+  const log = document.getElementById('dashboard-events');
+  try {
+    const r = await fetch(`${NOTIFIER}/notifications`);
+    const events = await r.json();
+    document.getElementById('nav-evt-count').textContent = events.length;
+    if (!events.length) { log.innerHTML = `<div class="empty">No events yet</div>`; return; }
+    log.innerHTML = `<div class="event-list">${events.slice(0,5).map(eventRowHTML).join('')}</div>`;
+  } catch(e) { log.innerHTML = `<div class="empty">Notifier unreachable</div>`; }
+}
+
+// Helper for fetch with timeout
+async function fetchWithTimeout(url, opts = {}, ms = 4000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { ...opts, signal: controller.signal });
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+// ── Health ───────────────────────────────────────────────────────────────────
+async function checkService(url, indId, textId, detailId) {
+  const ind = document.getElementById(indId);
+  const txt = document.getElementById(textId);
+  const det = document.getElementById(detailId);
+  try {
+    const r = await fetchWithTimeout(`${url}/healthz`, {}, 4000);
+    const d = await r.json();
+    ind.className = 'health-indicator up';
+    txt.textContent = 'UP'; txt.style.color = 'var(--color-green)';
+    if (det) det.textContent = JSON.stringify(d);
+    return { ok: true, data: d };
+  } catch(e) {
+    ind.className = 'health-indicator down';
+    txt.textContent = 'DOWN'; txt.style.color = 'var(--color-red)';
+    if (det) det.textContent = e.message;
+    return { ok: false };
+  }
+}
+
+async function loadHealth() {
+  await Promise.all([
+    checkService(API, 'hi-api', 'ht-api', 'hd-api'),
+    checkService(MATCHER, 'hi-matcher', 'ht-matcher', 'hd-matcher'),
+    checkService(NOTIFIER, 'hi-notifier', 'ht-notifier', 'hd-notifier'),
+  ]);
+}
+
+async function loadProbes() {
+  const tbody = document.getElementById('probe-tbody');
+  const probes = [
+    { svc: 'API', probe: 'Startup',   url: `${API}/startupz` },
+    { svc: 'API', probe: 'Liveness',  url: `${API}/healthz`  },
+    { svc: 'API', probe: 'Readiness', url: `${API}/readyz`   },
+    { svc: 'Matcher',  probe: 'Liveness', url: `${MATCHER}/healthz`  },
+    { svc: 'Notifier', probe: 'Liveness', url: `${NOTIFIER}/healthz` },
+  ];
+  const rows = await Promise.all(probes.map(async p => {
+    try {
+      const r = await fetchWithTimeout(p.url, {}, 4000);
+      const d = await r.json();
+      const color = r.ok ? 'var(--color-green)' : 'var(--color-red)';
+      return `<tr>
+        <td class="mono">${p.svc}</td>
+        <td>${p.probe}</td>
+        <td class="mono" style="font-size:11px">${p.url}</td>
+        <td><span class="badge ${r.ok ? 'badge-fulfilled' : 'badge-open'}">${r.status}</span></td>
+        <td class="mono" style="font-size:11px">${JSON.stringify(d)}</td>
+      </tr>`;
+    } catch(e) {
+      return `<tr>
+        <td class="mono">${p.svc}</td>
+        <td>${p.probe}</td>
+        <td class="mono" style="font-size:11px">${p.url}</td>
+        <td><span class="badge badge-open">ERR</span></td>
+        <td class="mono" style="font-size:11px;color:var(--color-red)">${e.message}</td>
+      </tr>`;
+    }
+  }));
+  tbody.innerHTML = rows.join('');
+}
+
+
+async function testRBACViolation() {
+  const out = document.getElementById('rbac-result');
+  out.innerHTML = '<span class="t-dim">// Fetching hotel token…</span>';
+  try {
+    // get a hotel token
+    const tokenResp = await fetch(`${API}/auth/token`, {
+      method: 'POST',
+      body: new URLSearchParams({ username: 'hotel-rbac-test', role: 'hotel', password: 'demo123' })
+    });
+    const { access_token } = await tokenResp.json();
+    out.innerHTML = '<span class="t-hi">// Hotel token acquired</span>';
+    // attempt to create a supplier (admin-only)
+    const r = await fetch(`${API}/suppliers`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'RBAC Test', contact_email: 'rbac@test.com', catalog_items: 'soap' })
+    });
+    const d = await r.json();
+    if (r.status === 403) {
+      out.innerHTML = `<span class="t-ok">✓ RBAC enforced</span>\n<span class="t-dim">HTTP ${r.status} Forbidden</span>\n<span class="t-dim">${JSON.stringify(d)}</span>`;
+      toast('RBAC violation blocked (403)');
+    } else {
+      out.innerHTML = `<span class="t-err">✗ RBAC BYPASS — status ${r.status}</span>\n<span class="t-dim">${JSON.stringify(d)}</span>`;
+      toast('RBAC not enforced!', 'err');
+    }
+  } catch(e) {
+    out.innerHTML = `<span class="t-err">Error: ${e.message}</span>`;
+  }
+}
+
+// ── Matcher ───────────────────────────────────────────────────────────────────
+async function testMatcher() {
+  const item    = document.getElementById('match-item').value.trim() || 'soap';
+  const qty     = parseInt(document.getElementById('match-qty').value) || 200;
+  const urgency = document.getElementById('match-urgency').value;
+  const out     = document.getElementById('match-result');
+  const btn     = document.getElementById('match-btn');
+
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Running…';
+  out.innerHTML = '<span class="t-dim">// Calling matcher service…</span>';
+  try {
+    const r = await fetch(`${MATCHER}/match`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requirement_id: 'test-' + Date.now(),
+        item, quantity: qty, urgency,
+        department: 'test', deadline: '2026-12-31', hotel_id: 'test-hotel'
+      })
+    });
+    const d = await r.json();
+    if (d.matched && d.candidates.length) {
+      const lines = d.candidates.map((c, i) =>
+        `<span class="${i === 0 ? 't-ok' : 't-hi'}">${i === 0 ? '▶' : ' '} #${i+1} ${c.supplier_name}</span><span class="t-dim">  score=${c.score.toFixed(2)}</span>`
+      );
+      out.innerHTML = `<span class="t-hi">// ${d.candidates.length} match(es) found for "${item}"</span>\n` + lines.join('\n');
+    } else {
+      out.innerHTML = `<span class="t-warn">// No matches for "${item}" (quantity=${qty}, urgency=${urgency})</span>`;
+    }
+  } catch(e) {
+    out.innerHTML = `<span class="t-err">// Error: ${e.message}</span>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Run matcher';
+  }
+}
+
+// ── Auto-refresh ─────────────────────────────────────────────────────────────
+function refreshAll() {
+  loadDashboard();
+  const activeView = document.querySelector('.view.active')?.id?.replace('view-','');
+  if (activeView === 'requirements')   { loadRequirements(); }
+  if (activeView === 'dashboard')      { loadRequirementsMini(); loadNotificationsMini(); }
+  if (activeView === 'events')         { loadNotifications(); }
+  if (activeView === 'entities')       { loadHotelTable(); loadSupplierTable(); }
+  if (activeView === 'health')         { loadHealth(); loadProbes(); }
+}
+
+function setAutoRefresh() {
+  clearInterval(refreshTimer);
+  const ms = parseInt(document.getElementById('refresh-interval').value);
+  document.getElementById('refresh-badge').textContent = ms > 0 ? (ms/1000)+'s' : 'off';
+  if (ms > 0) refreshTimer = setInterval(refreshAll, ms);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  // Set deadline 3 days from now
+  const d = new Date(); d.setDate(d.getDate() + 3);
+  document.getElementById('req-deadline').value = d.toISOString().split('T')[0];
+
+  // Auto-get admin token
+  await getToken();
+
+  // Load initial data
+  loadDashboard();
+  loadRequirementsMini();
+  loadNotificationsMini();
+  loadHealth();
+
+  setAutoRefresh();
+}
+
+init();
+</script>
+</body>
+</html>

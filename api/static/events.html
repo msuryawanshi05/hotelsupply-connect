@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Notification Events — HotelSupply Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/layout.css"/>
+</head>
+<body>
+
+<div class="shell">
+  <main class="main-content">
+    <div class="view-header">
+      <div class="view-title">Notification Event Stream</div>
+      <div class="view-desc">Audit log of simulated supplier email dispatches from the Notifier microservice</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Live Notification Logs</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadNotifications()">Refresh Stream</button>
+      </div>
+      <div class="card-body" id="events-container" style="max-height:650px;overflow-y:auto">
+        <div class="empty"><span class="spin"></span></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/static/common.js"></script>
+<script>
+  renderNav('events');
+
+  async function loadNotifications() {
+    const container = document.getElementById('events-container');
+    try {
+      const r = await fetch(`${NOTIFIER}/notifications`);
+      const events = await r.json();
+      if (!events.length) {
+        container.innerHTML = '<div class="empty"><div class="empty-title">No notifications dispatched</div>Post a requirement to trigger auto-matching &amp; notification</div>';
+        return;
+      }
+      container.innerHTML = events.map(e => `
+        <div style="display:flex;align-items:start;gap:12px;padding:12px;border-bottom:1px solid rgba(39,39,42,.6)">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--color-accent);margin-top:6px;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-weight:600;font-size:14px">${e.supplier_name}</span>
+              <span class="badge badge-fulfilled">email sent</span>
+            </div>
+            <div style="font-size:12px;color:var(--color-text-2);margin-top:4px">
+              Requirement: <strong>${e.item}</strong> (Qty: ${e.quantity}) · Urgency: <span class="urg urg-${e.urgency}">${e.urgency}</span>
+            </div>
+            <div class="mono" style="margin-top:4px">ID: ${e.requirement_id} · Timestamp: ${new Date(e.timestamp).toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch(e) {
+      container.innerHTML = `<div class="empty">Notifier service unreachable</div>`;
+    }
+  }
+
+  loadNotifications();
+  setInterval(loadNotifications, 5000);
+</script>
+</body>
+</html>

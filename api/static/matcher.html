@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Matcher Sandbox — HotelSupply Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/layout.css"/>
+</head>
+<body>
+
+<div class="shell">
+  <main class="main-content">
+    <div class="view-header">
+      <div class="view-title">Matcher Scoring Engine Sandbox</div>
+      <div class="view-desc">Test real-time catalog scoring &amp; rank suppliers by lead time, quantity, and reliability</div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Tester Card -->
+      <div class="card">
+        <div class="card-head"><span class="card-title">Matcher Tester</span></div>
+        <div class="card-body">
+          <div class="stack">
+            <div class="field">
+              <label>Item Name</label>
+              <input id="match-item" class="input" type="text" value="soap"/>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Quantity</label>
+                <input id="match-qty" class="input" type="number" value="200"/>
+              </div>
+              <div class="field">
+                <label>Urgency</label>
+                <select id="match-urgency" class="input">
+                  <option value="high">high</option>
+                  <option value="medium">medium</option>
+                  <option value="low">low</option>
+                </select>
+              </div>
+            </div>
+            <button id="match-btn" class="btn btn-primary btn-full" onclick="testMatcher()">Run Scoring Engine</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output Card -->
+      <div class="card">
+        <div class="card-head"><span class="card-title">Scoring Output</span></div>
+        <div class="card-body">
+          <div style="background:#000;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px;font-family:var(--font-mono);font-size:12px;min-height:160px;color:#a1a1aa" id="match-output">
+            // Click "Run Scoring Engine" to test supplier matching logic
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Catalog Reference -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-head"><span class="card-title">Active Demo Supplier Catalog</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Supplier Name</th><th>Catalog Items</th><th>Min Qty</th><th>Lead Time</th><th>Reliability</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">sup-001</td><td style="font-weight:600">CleanPro Supplies</td><td class="mono">soap, shampoo, conditioner, body wash, hand sanitizer</td><td class="mono">100</td><td class="mono">2 days</td><td><span class="urg urg-low">0.95</span></td></tr>
+            <tr><td class="mono">sup-002</td><td style="font-weight:600">LinenMaster Co.</td><td class="mono">towels, bed sheets, pillowcases, blankets, bathrobes</td><td class="mono">50</td><td class="mono">3 days</td><td><span class="urg urg-low">0.92</span></td></tr>
+            <tr><td class="mono">sup-003</td><td style="font-weight:600">HotelEssentials Ltd.</td><td class="mono">soap, towels, toilet paper, tissue boxes, cleaning spray, mop heads</td><td class="mono">200</td><td class="mono">1 day</td><td><span class="urg urg-medium">0.88</span></td></tr>
+            <tr><td class="mono">sup-004</td><td style="font-weight:600">GreenClean Solutions</td><td class="mono">cleaning spray, disinfectant, floor cleaner, glass cleaner, gloves</td><td class="mono">50</td><td class="mono">2 days</td><td><span class="urg urg-low">0.90</span></td></tr>
+            <tr><td class="mono">sup-005</td><td style="font-weight:600">Premier Hospitality Goods</td><td class="mono">soap, shampoo, towels, bed sheets, coffee pods, tea bags</td><td class="mono">100</td><td class="mono">2 days</td><td><span class="urg urg-low">0.93</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/static/common.js"></script>
+<script>
+  renderNav('matcher');
+
+  async function testMatcher() {
+    const item    = document.getElementById('match-item').value.trim() || 'soap';
+    const qty     = parseInt(document.getElementById('match-qty').value) || 200;
+    const urgency = document.getElementById('match-urgency').value;
+    const out     = document.getElementById('match-output');
+    const btn     = document.getElementById('match-btn');
+
+    btn.disabled = true; btn.textContent = 'Scoring…';
+    out.innerHTML = '<span style="color:#60a5fa">// Invoking matcher microservice…</span>';
+    try {
+      const r = await fetch(`${MATCHER}/match`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requirement_id: 'test-' + Date.now(),
+          item, quantity: qty, urgency,
+          department: 'test', deadline: '2026-12-31', hotel_id: 'test-hotel'
+        })
+      });
+      const d = await r.json();
+      if (d.matched && d.candidates.length) {
+        const lines = d.candidates.map((c, i) =>
+          `<div style="color:${i===0?'#4ade80':'#60a5fa'}">${i===0?'🏆':' '} #${i+1} ${c.supplier_name} <span style="color:#71717a">— score: ${c.score.toFixed(2)}</span></div>`
+        );
+        out.innerHTML = `<div style="color:#60a5fa;margin-bottom:6px">// ${d.candidates.length} candidate(s) matched for "${item}"</div>` + lines.join('');
+      } else {
+        out.innerHTML = `<div style="color:#fbbf24">// No suppliers matched criteria for "${item}"</div>`;
+      }
+    } catch(e) {
+      out.innerHTML = `<div style="color:#f87171">// Error: ${e.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Run Scoring Engine';
+    }
+  }
+</script>
+</body>
+</html>

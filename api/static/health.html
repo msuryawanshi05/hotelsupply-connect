@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Service Health & Security — HotelSupply Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/layout.css"/>
+</head>
+<body>
+
+<div class="shell">
+  <main class="main-content">
+    <div class="view-header">
+      <div class="view-title">Service Health &amp; Security Monitor</div>
+      <div class="view-desc">Monitor microservices, K8s probes (/startupz, /healthz, /readyz), and RBAC controls</div>
+    </div>
+
+    <!-- Microservice Health Cards -->
+    <div class="grid-3" style="margin-bottom:20px">
+      <div class="card" style="padding:16px">
+        <div class="mono" style="margin-bottom:6px">API SERVICE (:8000)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="hi-api" style="width:10px;height:10px;border-radius:50%;background:#71717a"></div>
+          <span id="ht-api" style="font-weight:700;font-size:16px">CHECKING…</span>
+        </div>
+        <div class="mono" style="margin-top:8px;font-size:11px" id="hd-api"></div>
+      </div>
+      <div class="card" style="padding:16px">
+        <div class="mono" style="margin-bottom:6px">MATCHER SERVICE (:8001)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="hi-matcher" style="width:10px;height:10px;border-radius:50%;background:#71717a"></div>
+          <span id="ht-matcher" style="font-weight:700;font-size:16px">CHECKING…</span>
+        </div>
+        <div class="mono" style="margin-top:8px;font-size:11px" id="hd-matcher"></div>
+      </div>
+      <div class="card" style="padding:16px">
+        <div class="mono" style="margin-bottom:6px">NOTIFIER SERVICE (:8002)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="hi-notifier" style="width:10px;height:10px;border-radius:50%;background:#71717a"></div>
+          <span id="ht-notifier" style="font-weight:700;font-size:16px">CHECKING…</span>
+        </div>
+        <div class="mono" style="margin-top:8px;font-size:11px" id="hd-notifier"></div>
+      </div>
+    </div>
+
+    <!-- Kubernetes Probe Table -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-head">
+        <span class="card-title">Kubernetes Probe Endpoints</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadHealth()">Refresh Probes</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Service</th><th>Probe Type</th><th>Endpoint</th><th>Status</th><th>Response JSON</th></tr></thead>
+          <tbody id="probe-tbody">
+            <tr><td colspan="5"><div class="empty"><span class="spin"></span></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RBAC Security Test Harness -->
+    <div class="card">
+      <div class="card-head"><span class="card-title">RBAC Security Violation Test</span></div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--color-text-2);margin-bottom:12px">
+          Triggers an illegal access attempt: a hotel role user attempting to invoke an admin-only endpoint (`POST /suppliers`).
+          Verifies that JWT middleware correctly blocks unauthorized requests with HTTP 403 Forbidden.
+        </p>
+        <button class="btn btn-danger" onclick="testRBACViolation()">Run RBAC Security Test</button>
+        <div style="background:#000;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px;font-family:var(--font-mono);font-size:12px;min-height:50px;margin-top:12px;color:#a1a1aa" id="rbac-output">
+          // Click button above to verify 403 Forbidden enforcement
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/static/common.js"></script>
+<script>
+  renderNav('health');
+
+  async function checkService(url, indId, textId, detailId) {
+    const ind = document.getElementById(indId);
+    const txt = document.getElementById(textId);
+    const det = document.getElementById(detailId);
+    try {
+      const r = await fetchWithTimeout(`${url}/healthz`, {}, 4000);
+      const d = await r.json();
+      ind.style.background = 'var(--color-green)';
+      ind.style.boxShadow = '0 0 8px rgba(34,197,94,.5)';
+      txt.textContent = 'UP'; txt.style.color = 'var(--color-green)';
+      if (det) det.textContent = JSON.stringify(d);
+      return true;
+    } catch(e) {
+      ind.style.background = 'var(--color-red)';
+      ind.style.boxShadow = 'none';
+      txt.textContent = 'DOWN'; txt.style.color = 'var(--color-red)';
+      if (det) det.textContent = e.message;
+      return false;
+    }
+  }
+
+  async function loadHealth() {
+    await Promise.all([
+      checkService(API, 'hi-api', 'ht-api', 'hd-api'),
+      checkService(MATCHER, 'hi-matcher', 'ht-matcher', 'hd-matcher'),
+      checkService(NOTIFIER, 'hi-notifier', 'ht-notifier', 'hd-notifier'),
+    ]);
+    await loadProbes();
+  }
+
+  async function loadProbes() {
+    const tbody = document.getElementById('probe-tbody');
+    const probes = [
+      { svc: 'API', probe: 'Startup',   url: `${API}/startupz` },
+      { svc: 'API', probe: 'Liveness',  url: `${API}/healthz`  },
+      { svc: 'API', probe: 'Readiness', url: `${API}/readyz`   },
+      { svc: 'Matcher',  probe: 'Liveness', url: `${MATCHER}/healthz`  },
+      { svc: 'Notifier', probe: 'Liveness', url: `${NOTIFIER}/healthz` },
+    ];
+    const rows = await Promise.all(probes.map(async p => {
+      try {
+        const r = await fetchWithTimeout(p.url, {}, 4000);
+        const d = await r.json();
+        return `<tr>
+          <td class="mono">${p.svc}</td>
+          <td>${p.probe}</td>
+          <td class="mono">${p.url}</td>
+          <td><span class="badge ${r.ok?'badge-fulfilled':'badge-open'}">${r.status}</span></td>
+          <td class="mono">${JSON.stringify(d)}</td>
+        </tr>`;
+      } catch(e) {
+        return `<tr>
+          <td class="mono">${p.svc}</td>
+          <td>${p.probe}</td>
+          <td class="mono">${p.url}</td>
+          <td><span class="badge badge-open">ERR</span></td>
+          <td class="mono" style="color:var(--color-red)">${e.message}</td>
+        </tr>`;
+      }
+    }));
+    tbody.innerHTML = rows.join('');
+  }
+
+  async function testRBACViolation() {
+    const out = document.getElementById('rbac-output');
+    out.innerHTML = '<span style="color:#60a5fa">// Requesting hotel role token…</span>';
+    try {
+      const tokenResp = await fetch(`${API}/auth/token`, {
+        method: 'POST',
+        body: new URLSearchParams({ username: 'rbac-test-hotel', role: 'hotel', password: 'demo123' })
+      });
+      const { access_token } = await tokenResp.json();
+      out.innerHTML = '<span style="color:#60a5fa">// Hotel token obtained. Sending POST /suppliers (admin-only)…</span>';
+      const r = await fetch(`${API}/suppliers`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Hacker', contact_email: 'h@evil.com', catalog_items: 'soap' })
+      });
+      const d = await r.json();
+      if (r.status === 403) {
+        out.innerHTML = `<div style="color:#4ade80">✓ SECURITY PASSED: HTTP 403 Forbidden</div><div style="color:#71717a">${JSON.stringify(d)}</div>`;
+        toast('RBAC check passed: HTTP 403 Forbidden');
+      } else {
+        out.innerHTML = `<div style="color:#f87171">✗ SECURITY FAIL: Unexpected status ${r.status}</div>`;
+        toast('RBAC failed', 'err');
+      }
+    } catch(e) {
+      out.innerHTML = `<div style="color:#f87171">Error: ${e.message}</div>`;
+    }
+  }
+
+  loadHealth();
+</script>
+</body>
+</html>

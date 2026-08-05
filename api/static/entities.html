@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hotels & Suppliers — HotelSupply Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/layout.css"/>
+</head>
+<body>
+
+<div class="shell">
+  <main class="main-content">
+    <div class="view-header">
+      <div class="view-title">Hotels &amp; Suppliers Directory</div>
+      <div class="view-desc">Register and manage participants on the procurement platform</div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Hotels Column -->
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Register Hotel</span></div>
+          <div class="card-body">
+            <div class="stack">
+              <div class="field">
+                <label>Hotel Name</label>
+                <input id="hotel-name" class="input" type="text" placeholder="e.g. Oberoi Udaivilas"/>
+              </div>
+              <div class="field">
+                <label>Procurement Contact Email</label>
+                <input id="hotel-email" class="input" type="email" placeholder="purchasing@hotel.com"/>
+              </div>
+              <button class="btn btn-primary" onclick="createHotel()">Register Hotel</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Registered Hotels</span>
+            <button class="btn btn-ghost btn-sm" onclick="loadHotelTable()">Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Registered</th></tr></thead>
+              <tbody id="hotel-tbody"><tr><td colspan="3"><div class="empty"><span class="spin"></span></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suppliers Column -->
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Register Supplier</span></div>
+          <div class="card-body">
+            <div class="stack">
+              <div class="field">
+                <label>Supplier Name</label>
+                <input id="supplier-name" class="input" type="text" placeholder="e.g. CleanPro Supplies"/>
+              </div>
+              <div class="field">
+                <label>Sales Email</label>
+                <input id="supplier-email" class="input" type="email" placeholder="sales@supplier.com"/>
+              </div>
+              <div class="field">
+                <label>Catalog Items (comma-separated)</label>
+                <input id="supplier-catalog" class="input" type="text" placeholder="soap, towels, shampoo"/>
+              </div>
+              <button class="btn btn-primary" onclick="createSupplier()">Register Supplier</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Registered Suppliers</span>
+            <button class="btn btn-ghost btn-sm" onclick="loadSupplierTable()">Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Catalog</th><th>Registered</th></tr></thead>
+              <tbody id="supplier-tbody"><tr><td colspan="3"><div class="empty"><span class="spin"></span></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/static/common.js"></script>
+<script>
+  renderNav('entities');
+
+  async function initPage() {
+    await ensureToken();
+    await Promise.all([loadHotelTable(), loadSupplierTable()]);
+  }
+
+  async function createHotel() {
+    const name = document.getElementById('hotel-name').value.trim();
+    const email = document.getElementById('hotel-email').value.trim();
+    if (!name || !email) return toast('Fill hotel name and email', 'err');
+    try {
+      const r = await fetch(`${API}/hotels`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ name, contact_email: email })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'Error');
+      toast(`Hotel "${d.name}" registered`);
+      document.getElementById('hotel-name').value = '';
+      document.getElementById('hotel-email').value = '';
+      loadHotelTable();
+    } catch(e) { toast(e.message, 'err'); }
+  }
+
+  async function loadHotelTable() {
+    const tbody = document.getElementById('hotel-tbody');
+    try {
+      const r = await fetch(`${API}/hotels`, { headers: authHeaders(false) });
+      const hotels = await r.json();
+      if (!hotels.length) { tbody.innerHTML = '<tr><td colspan="3"><div class="empty">No hotels</div></td></tr>'; return; }
+      tbody.innerHTML = hotels.map(h => `
+        <tr>
+          <td><span style="font-weight:600">${h.name}</span></td>
+          <td class="mono">${h.contact_email}</td>
+          <td class="mono">${h.created_at ? h.created_at.split('T')[0] : '—'}</td>
+        </tr>
+      `).join('');
+    } catch(e) { tbody.innerHTML = `<tr><td colspan="3"><div class="empty">Error</div></td></tr>`; }
+  }
+
+  async function createSupplier() {
+    const name = document.getElementById('supplier-name').value.trim();
+    const email = document.getElementById('supplier-email').value.trim();
+    const catalog = document.getElementById('supplier-catalog').value.trim();
+    if (!name || !email || !catalog) return toast('Fill supplier fields', 'err');
+    try {
+      const r = await fetch(`${API}/suppliers`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ name, contact_email: email, catalog_items: catalog })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'Error');
+      toast(`Supplier "${d.name}" registered`);
+      document.getElementById('supplier-name').value = '';
+      document.getElementById('supplier-email').value = '';
+      document.getElementById('supplier-catalog').value = '';
+      loadSupplierTable();
+    } catch(e) { toast(e.message, 'err'); }
+  }
+
+  async function loadSupplierTable() {
+    const tbody = document.getElementById('supplier-tbody');
+    try {
+      const r = await fetch(`${API}/suppliers`, { headers: authHeaders(false) });
+      const suppliers = await r.json();
+      if (!suppliers.length) { tbody.innerHTML = '<tr><td colspan="3"><div class="empty">No suppliers</div></td></tr>'; return; }
+      tbody.innerHTML = suppliers.map(s => `
+        <tr>
+          <td><span style="font-weight:600">${s.name}</span></td>
+          <td class="mono">${s.catalog_items}</td>
+          <td class="mono">${s.created_at ? s.created_at.split('T')[0] : '—'}</td>
+        </tr>
+      `).join('');
+    } catch(e) { tbody.innerHTML = `<tr><td colspan="3"><div class="empty">Error</div></td></tr>`; }
+  }
+
+  initPage();
+</script>
+</body>
+</html>

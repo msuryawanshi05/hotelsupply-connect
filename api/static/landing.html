@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>HotelSupply Connect — Event-Driven Hospitality Procurement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/layout.css"/>
+<style>
+  /* Landing page custom styles */
+  .hero-section {
+    text-align: center;
+    padding: 64px 20px 48px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-accent-hi);
+    margin-bottom: 20px;
+  }
+  .hero-headline {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -.04em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  @media(max-width:768px){.hero-headline{font-size:32px}}
+  .hero-subtext {
+    font-size: 16px;
+    color: var(--color-text-2);
+    max-width: 620px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+  }
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* Metric Ribbon */
+  .metrics-ribbon {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 48px 0;
+  }
+  @media(max-width:768px){.metrics-ribbon{grid-template-columns:repeat(2,1fr)}}
+  .metric-item {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    text-align: center;
+  }
+  .metric-num {
+    font-size: 32px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: var(--color-text);
+  }
+  .metric-label {
+    font-size: 12px;
+    color: var(--color-text-2);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* Bento Grid Features */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 64px;
+  }
+  @media(max-width:900px){.bento-grid{grid-template-columns:1fr}}
+  .bento-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .bento-icon {
+    width: 36px; height: 36px; border-radius: var(--radius-md);
+    background: var(--color-surface-2); border: 1px solid var(--color-border);
+    display: grid; place-items: center; margin-bottom: 16px; color: var(--color-accent-hi);
+  }
+  .bento-title {
+    font-size: 16px; font-weight: 700; margin-bottom: 8px; letter-spacing: -.02em;
+  }
+  .bento-desc {
+    font-size: 13.5px; color: var(--color-text-2); line-height: 1.5;
+  }
+
+  /* Architecture Diagram Box */
+  .arch-box {
+    background: #000;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    margin-bottom: 64px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #a1a1aa;
+    overflow-x: auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <main class="main-content">
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-eyebrow">
+        <span>⚡ Cloud-Native Hackathon Submission</span>
+      </div>
+      <h1 class="hero-headline">Real-Time Event-Driven Procurement for Hospitality</h1>
+      <p class="hero-subtext">
+        Automate recurring hotel supply requirements with instant supplier matching, sub-second notifications, and RBAC lifecycle enforcement.
+      </p>
+      <div class="hero-actions">
+        <a href="/dashboard" class="btn btn-primary" style="padding:10px 20px;font-size:14px">
+          Launch Dashboard →
+        </a>
+        <a href="/orders" class="btn btn-ghost" style="padding:10px 20px;font-size:14px">
+          Post Requirement
+        </a>
+        <a href="/matcher-page" class="btn btn-ghost" style="padding:10px 20px;font-size:14px">
+          Matcher Engine
+        </a>
+      </div>
+    </section>
+
+    <!-- Metrics Ribbon -->
+    <section class="metrics-ribbon">
+      <div class="metric-item">
+        <div class="metric-num" id="m-hotels">5</div>
+        <div class="metric-label">Registered Hotels</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-num" id="m-suppliers">5</div>
+        <div class="metric-label">Vetted Suppliers</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-num" id="m-orders">8</div>
+        <div class="metric-label">Pre-Made Orders</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-num" style="color:var(--color-green)">100%</div>
+        <div class="metric-label">SLA Fulfillment Rate</div>
+      </div>
+    </section>
+
+    <!-- Architecture Visualizer -->
+    <section>
+      <div class="view-header">
+        <div class="view-title">Event-Driven Microservice Architecture</div>
+        <div class="view-desc">High-availability pipeline built for OpenShift / Kubernetes</div>
+      </div>
+      <div class="arch-box">
+<span style="color:var(--color-accent-hi)">[Client / Browser]</span>
+       │ HTTPS (TLS)
+       ▼
+<span style="color:#60a5fa">┌─────────────────────────────────────────────────────────────┐</span>
+<span style="color:#60a5fa">│ Ingress / Route (hotelsupply.example.com)                   │</span>
+<span style="color:#60a5fa">└──────────────────────────────┬──────────────────────────────┘</span>
+                               │
+                               ▼
+<span style="color:#4ade80">┌─────────────────────────────────────────────────────────────┐</span>
+<span style="color:#4ade80">│ API Gateway Service (FastAPI + PostgreSQL + SQLModel)       │</span>
+<span style="color:#4ade80">│ 3+ Replicas (HPA 3-10) · JWT RBAC · Prometheus Instrumentator │</span>
+<span style="color:#4ade80">└──────────────┬──────────────────────────────┬───────────────┘</span>
+               │                              │
+               ▼ HTTP (NetworkPolicy)         ▼ HTTP (NetworkPolicy)
+<span style="color:#fb923c">┌─────────────────────────────┐</span>  <span style="color:#a78bfa">┌─────────────────────────────┐</span>
+<span style="color:#fb923c">│ Matcher Function            │</span>  <span style="color:#a78bfa">│ Notifier Function           │</span>
+<span style="color:#fb923c">│ Catalog Scoring Engine      │</span>  <span style="color:#a78bfa">│ JSON Event Dispatcher       │</span>
+<span style="color:#fb923c">│ Knative Scale-to-Zero       │</span>  <span style="color:#a78bfa">│ Simulated Email Dispatch    │</span>
+<span style="color:#fb923c">└─────────────────────────────┘</span>  <span style="color:#a78bfa">└─────────────────────────────┘</span>
+      </div>
+    </section>
+
+    <!-- Bento Features Grid -->
+    <section>
+      <div class="view-header">
+        <div class="view-title">Core Platform Capabilities</div>
+        <div class="view-desc">Engineered for seamless B2B procurement moderation</div>
+      </div>
+      <div class="bento-grid">
+        <div class="bento-card">
+          <div>
+            <div class="bento-icon">🎯</div>
+            <div class="bento-title">Smart Catalog Scoring</div>
+            <div class="bento-desc">Evaluates lead times, minimum order quantities, item keyword matches, and historical supplier reliability scores.</div>
+          </div>
+          <div style="margin-top:20px"><a href="/matcher-page" style="color:var(--color-accent-hi);font-size:12.5px;font-weight:600;text-decoration:none">Test Matcher →</a></div>
+        </div>
+
+        <div class="bento-card">
+          <div>
+            <div class="bento-icon">⚡</div>
+            <div class="bento-title">Async Event Dispatch</div>
+            <div class="bento-desc">Requirement creation triggers background matching and notifier dispatch using non-blocking HTTP client calls.</div>
+          </div>
+          <div style="margin-top:20px"><a href="/events-page" style="color:var(--color-accent-hi);font-size:12.5px;font-weight:600;text-decoration:none">Stream Events →</a></div>
+        </div>
+
+        <div class="bento-card">
+          <div>
+            <div class="bento-icon">🔒</div>
+            <div class="bento-title">Strict JWT RBAC &amp; NetworkPolicy</div>
+            <div class="bento-desc">Role-based access control enforces hotel, supplier, and admin boundaries. Default-deny network policies restrict pod communication.</div>
+          </div>
+          <div style="margin-top:20px"><a href="/health-page" style="color:var(--color-accent-hi);font-size:12.5px;font-weight:600;text-decoration:none">Run Security Test →</a></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Navigation Banner -->
+    <section class="card" style="padding:32px;background:var(--color-surface);border-color:var(--color-border-hi)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;letter-spacing:-.02em">Ready to explore the platform?</h2>
+          <p style="font-size:13.5px;color:var(--color-text-2);margin-top:4px">Inspect orders, register hotels/suppliers, or run matcher simulations.</p>
+        </div>
+        <div style="display:flex;gap:10px">
+          <a href="/orders" class="btn btn-primary">Requirements Page</a>
+          <a href="/entities-page" class="btn btn-ghost">Directory Page</a>
+          <a href="/profile" class="btn btn-ghost">Auth &amp; Profile</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/static/common.js"></script>
+<script>
+  renderNav('landing');
+
+  async function loadMetrics() {
+    await ensureToken();
+    try {
+      const r = await fetch(`${API}/dashboard/summary`);
+      const d = await r.json();
+      document.getElementById('m-orders').textContent = d.total || 8;
+    } catch(e) {}
+
+    try {
+      const r = await fetch(`${API}/hotels`, { headers: authHeaders(false) });
+      const hotels = await r.json();
+      document.getElementById('m-hotels').textContent = hotels.length || 5;
+    } catch(e) {}
+
+    try {
+      const r = await fetch(`${API}/suppliers`, { headers: authHeaders(false) });
+      const suppliers = await r.json();
+      document.getElementById('m-suppliers').textContent = suppliers.length || 5;
+    } catch(e) {}
+  }
+
+  loadMetrics();
+</script>
+</body>
+</html>

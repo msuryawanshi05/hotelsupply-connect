@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Requirements — HotelSupply Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/layout.css"/>
+</head>
+<body>
+
+<div class="shell">
+  <main class="main-content">
+    <div class="view-header">
+      <div class="view-title">Requirements &amp; Orders</div>
+      <div class="view-desc">Post new requirements and transition orders through the lifecycle</div>
+    </div>
+
+    <!-- Post Requirement Form -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-head"><span class="card-title">Post New Requirement</span></div>
+      <div class="card-body">
+        <div class="stack">
+          <div class="field-row">
+            <div class="field">
+              <label>Select Hotel</label>
+              <select id="req-hotel-id" class="input"><option value="">Loading hotels…</option></select>
+            </div>
+            <div class="field">
+              <label>Item Name</label>
+              <input id="req-item" class="input" type="text" placeholder="e.g. Eco Shampoo Bottles"/>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Quantity</label>
+              <input id="req-qty" class="input" type="number" value="500" min="1"/>
+            </div>
+            <div class="field">
+              <label>Urgency Level</label>
+              <select id="req-urgency" class="input">
+                <option value="high">High (Urgent)</option>
+                <option value="medium" selected>Medium</option>
+                <option value="low">Low (Standard)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Department</label>
+              <input id="req-dept" class="input" type="text" placeholder="housekeeping"/>
+            </div>
+            <div class="field">
+              <label>Required Deadline</label>
+              <input id="req-deadline" class="input" type="date"/>
+            </div>
+          </div>
+          <div>
+            <button id="post-btn" class="btn btn-primary" onclick="postRequirement()">Post &amp; Match Requirement</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Table -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">All Requirements</span>
+        <div style="display:flex;gap:8px">
+          <select id="status-filter" class="input" style="font-size:12px;padding:4px 24px 4px 8px" onchange="renderTable()">
+            <option value="all">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="matched">Matched</option>
+            <option value="accepted">Accepted</option>
+            <option value="fulfilled">Fulfilled</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="loadRequirements()">Refresh</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Urgency</th>
+              <th>Department</th>
+              <th>Deadline</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="req-tbody">
+            <tr><td colspan="8"><div class="empty"><span class="spin"></span></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/static/common.js"></script>
+<script>
+  renderNav('orders');
+
+  let allReqs = [];
+
+  async function initPage() {
+    await ensureToken();
+    const d = new Date(); d.setDate(d.getDate() + 3);
+    document.getElementById('req-deadline').value = d.toISOString().split('T')[0];
+    await Promise.all([loadHotelsDropdown(), loadRequirements()]);
+  }
+
+  async function loadHotelsDropdown() {
+    try {
+      const r = await fetch(`${API}/hotels`, { headers: authHeaders(false) });
+      const hotels = await r.json();
+      const sel = document.getElementById('req-hotel-id');
+      sel.innerHTML = '<option value="">— Select Hotel —</option>' +
+        hotels.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
+    } catch(e) {}
+  }
+
+  async function loadRequirements() {
+    const tbody = document.getElementById('req-tbody');
+    try {
+      const r = await fetch(`${API}/requirements`, { headers: authHeaders(false) });
+      if (!r.ok) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty">Auth error — login via Auth & Profile page</div></td></tr>'; return; }
+      allReqs = await r.json();
+      renderTable();
+    } catch(e) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty">Error: ${e.message}</div></td></tr>`;
+    }
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('req-tbody');
+    const filter = document.getElementById('status-filter').value;
+    let reqs = allReqs.slice().reverse();
+    if (filter !== 'all') {
+      reqs = reqs.filter(r => r.status === filter);
+    }
+    if (!reqs.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty">No requirements match filter</div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = reqs.map(req => {
+      const actions = req.status === 'matched'
+        ? `<button class="btn btn-success btn-sm" onclick="acceptReq('${req.id}')">Accept</button>`
+        : req.status === 'accepted'
+        ? `<button class="btn btn-primary btn-sm" onclick="fulfillReq('${req.id}')">Fulfill</button>`
+        : '<span class="mono">—</span>';
+
+      return `
+        <tr>
+          <td class="mono">${req.id.substring(0,8)}</td>
+          <td><span style="font-weight:600">${req.item}</span></td>
+          <td class="mono">${req.quantity.toLocaleString()}</td>
+          <td><span class="urg urg-${req.urgency}">${req.urgency.toUpperCase()}</span></td>
+          <td class="mono">${req.department || 'housekeeping'}</td>
+          <td class="mono">${req.deadline ? req.deadline.split('T')[0] : '—'}</td>
+          <td><span class="badge badge-${req.status}">${req.status}</span></td>
+          <td>${actions}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function postRequirement() {
+    const hotel_id = document.getElementById('req-hotel-id').value;
+    const item = document.getElementById('req-item').value.trim();
+    const quantity = parseInt(document.getElementById('req-qty').value);
+    const urgency = document.getElementById('req-urgency').value;
+    const department = document.getElementById('req-dept').value.trim() || 'housekeeping';
+    const deadline = document.getElementById('req-deadline').value;
+
+    if (!hotel_id || !item || !deadline) return toast('Fill out hotel, item, and deadline', 'err');
+
+    const btn = document.getElementById('post-btn');
+    btn.disabled = true; btn.textContent = 'Posting…';
+    try {
+      const r = await fetch(`${API}/requirements`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ hotel_id, item, quantity, urgency, department, deadline })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'Failed');
+      toast(`Requirement posted! Matcher running…`);
+      setTimeout(() => { loadRequirements(); }, 2500);
+    } catch(e) { toast(e.message, 'err'); }
+    finally { btn.disabled = false; btn.textContent = 'Post & Match Requirement'; }
+  }
+
+  async function acceptReq(id) {
+    try {
+      const r = await fetch(`${API}/requirements/${id}/accept`, { method: 'PATCH', headers: authHeaders(false) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail);
+      toast('Order accepted');
+      loadRequirements();
+    } catch(e) { toast(e.message, 'err'); }
+  }
+
+  async function fulfillReq(id) {
+    try {
+      const r = await fetch(`${API}/requirements/${id}/fulfill`, { method: 'PATCH', headers: authHeaders(false) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail);
+      toast('Order fulfilled!');
+      loadRequirements();
+    } catch(e) { toast(e.message, 'err'); }
+  }
+
+  initPage();
+</script>
+</body>
+</html>
