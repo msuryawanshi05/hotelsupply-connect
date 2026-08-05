@@ -1,3 +1,4 @@
+RUN mkdir -p /app/static && chmod -R g+rwX /app/static
 # Deliverable: Container image with non-root user, minimal base
 # Ref: Hackathon Security Requirements
 FROM python:3.11-slim
