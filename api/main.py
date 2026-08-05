@@ -21,7 +21,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- Config ---
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://hotelsupply:hotelsupply@localhost:5432/hotelsupplydb")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/hotelsupply.db")
+
 MATCHER_URL = os.getenv("MATCHER_URL", "http://localhost:8001")
 NOTIFIER_URL = os.getenv("NOTIFIER_URL", "http://localhost:8002")
 SECRET_KEY = os.getenv("SECRET_KEY", "changeme-replace-in-production")
