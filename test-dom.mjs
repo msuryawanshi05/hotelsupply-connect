@@ -91,11 +91,13 @@ async function runAPITests() {
   // 3. Hotels
   let hotelId;
   try {
-    const r = await apiPost('/hotels', { name: 'Test Grand Hotel', contact_email: 'test@grand.com' }, adminToken);
+    const testName = `Test Unique Hotel ${Date.now()}`;
+    const r = await apiPost('/hotels', { name: testName, contact_email: 'test@grand.com' }, adminToken);
     if (r.ok && r.data.id) {
       hotelId = r.data.id;
       log(PASS, 'POST /hotels (admin)', `id=${hotelId.substring(0,8)}…`);
     } else log(FAIL, 'POST /hotels', JSON.stringify(r.data));
+
   } catch(e) { log(FAIL, 'POST /hotels', e.message); }
 
   try {
