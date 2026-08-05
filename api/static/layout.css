@@ -133,10 +133,15 @@ body::before{
   display:flex;align-items:center;gap:4px;
   list-style:none;
 }
+html,body{overflow-x:hidden;width:100%}
+
 @media(max-width:850px){
-  .header-container{padding:0 12px;gap:8px}
-  .nav-menu{overflow-x:auto;max-width:45vw;white-space:nowrap;-webkit-overflow-scrolling:touch}
-  .nav-link{padding:4px 8px;font-size:12px}
+  .header-container{padding:0 8px;gap:6px}
+  .nav-menu{overflow-x:auto;max-width:38vw;white-space:nowrap;-webkit-overflow-scrolling:touch}
+  .nav-link{padding:4px 6px;font-size:11.5px}
+  .header-actions{gap:4px}
+  .theme-toggle{padding:3px 8px;font-size:11px}
+  .pill{display:none}
 }
 
 .nav-link{
@@ -158,6 +163,7 @@ body::before{
   display:inline-flex;align-items:center;gap:6px;
   transition:all .15s var(--ease-out);
 }
+
 .theme-toggle:hover{border-color:var(--color-border-hi);background:var(--color-surface-3)}
 
 .pill{
