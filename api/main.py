@@ -151,17 +151,19 @@ matcher_duration_seconds = Histogram(
 
 def seed_initial_data():
     with Session(engine) as session:
-        # Clean up any leftover duplicate test hotels created during automated DOM testing
+        # Clean up any leftover duplicate test hotels & requirements created during automated DOM testing
         test_hotels = session.exec(select(Hotel).where(Hotel.name.like("Test%"))).all()
-        for th in test_hotels:
-            session.delete(th)
-        session.commit()
+        if test_hotels:
+            test_hotel_ids = [th.id for th in test_hotels]
+            test_reqs = session.exec(select(Requirement).where(Requirement.hotel_id.in_(test_hotel_ids))).all()
+            for tr in test_reqs:
+                session.delete(tr)
+            for th in test_hotels:
+                session.delete(th)
+            session.commit()
 
-        existing_hotels = session.exec(select(Hotel)).all()
-        if len(existing_hotels) >= 25:
-            return
+        logger.info("Ensuring 25 Real Hotels, 25 Suppliers, and 25 Requirements are seeded...")
 
-        logger.info("Seeding 25 Real Hotels, 25 Suppliers, and 25 Requirements...")
         
         # 25 Real Hotels
         hotel_data = [
