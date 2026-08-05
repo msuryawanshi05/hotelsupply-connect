@@ -1,0 +1,221 @@
+# HotelSupply Connect — CI/CD Pipeline
+# Deliverable 2: CI/CD pipeline: test → build → scan → push → deploy
+# Deliverable 3: Manifests applied via kubectl in deploy step
+# Deliverable 4: Images pushed to GHCR
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/hotelsupply
+
+jobs:
+  # ─── Job 1: Run Tests ────────────────────────────────────────────────
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install API dependencies
+        run: |
+          cd api
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio httpx
+
+      - name: Run API tests
+        run: |
+          cd api
+          python -m pytest tests/ -v --tb=short
+        env:
+          DATABASE_URL: sqlite:///./test.db
+          MATCHER_URL: http://localhost:8001
+          NOTIFIER_URL: http://localhost:8002
+          SECRET_KEY: test-secret-key-ci
+
+  # ─── Job 2: Build Docker Images ──────────────────────────────────────
+  build:
+    name: Build Images
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      matrix:
+        service:
+          - name: api
+            context: api
+            tag: hotelsupply-api
+          - name: matcher
+            context: functions/matcher
+            tag: hotelsupply-matcher
+          - name: notifier
+            context: functions/notifier
+            tag: hotelsupply-notifier
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service.name }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          push: false
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service.tag }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/${{ matrix.service.name }}.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service.name }}-image
+          path: /tmp/${{ matrix.service.name }}.tar
+          retention-days: 1
+
+  # ─── Job 3: Security Scan with Trivy ─────────────────────────────────
+  scan:
+    name: Vulnerability Scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: build
+    # Deliverable 2: Trivy vulnerability scan step
+    strategy:
+      matrix:
+        service: [api, matcher, notifier]
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.service }}-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load --input /tmp/${{ matrix.service }}.tar
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          input: /tmp/${{ matrix.service }}.tar
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  # ─── Job 4: Push to GHCR ─────────────────────────────────────────────
+  push:
+    name: Push to GHCR
+    runs-on: ubuntu-latest
+    needs: scan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service:
+          - name: api
+            context: api
+            tag: hotelsupply-api
+          - name: matcher
+            context: functions/matcher
+            tag: hotelsupply-matcher
+          - name: notifier
+            context: functions/notifier
+            tag: hotelsupply-notifier
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service.tag }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and Push ${{ matrix.service.name }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ─── Job 5: Deploy to OpenShift/Kubernetes ───────────────────────────
+  deploy:
+    name: Deploy to Cluster
+    runs-on: ubuntu-latest
+    needs: push
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # Deliverable 3: kubectl apply of K8s manifests
+    # Requires GitHub Secret: KUBE_CONFIG (base64-encoded kubeconfig)
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Update image tags in manifests
+        run: |
+          SHA_TAG=${{ github.sha }}
+          sed -i "s|:latest|:${SHA_TAG}|g" k8s/api-deployment.yaml
+          sed -i "s|:latest|:${SHA_TAG}|g" k8s/functions.yaml
+
+      - name: Apply namespace and secrets (idempotent)
+        run: |
+          kubectl apply -f k8s/postgres.yaml
+          echo "NOTE: Apply sealed-secret.yaml separately via Sealed Secrets workflow"
+
+      - name: Apply K8s manifests
+        run: |
+          kubectl apply -f k8s/rbac.yaml
+          kubectl apply -f k8s/networkpolicy.yaml
+          kubectl apply -f k8s/api-service.yaml
+          kubectl apply -f k8s/functions.yaml
+          kubectl apply -f k8s/api-deployment.yaml
+          kubectl apply -f k8s/api-hpa.yaml
+          kubectl apply -f k8s/ingress.yaml
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/hotelsupply-api -n hotelsupply --timeout=180s
+          kubectl rollout status deployment/matcher -n hotelsupply --timeout=120s
+          kubectl rollout status deployment/notifier -n hotelsupply --timeout=120s
+
+      - name: Verify deployment health
+        run: |
+          kubectl get pods -n hotelsupply
+          kubectl get hpa -n hotelsupply
