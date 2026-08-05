@@ -1,6 +1,6 @@
 /* HotelSupply Connect — Common JS Module (Themeable Top Navigation) */
 
-const API      = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? window.location.origin : 'http://localhost:8000';
+const API      = window.location.origin;
 const MATCHER  = `${API}/proxy/matcher`;
 const NOTIFIER = `${API}/proxy/notifier`;
 
