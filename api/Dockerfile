@@ -1,7 +1,7 @@
-RUN mkdir -p /app/static && chmod -R g+rwX /app/static
+FROM python:3.11-slim
+
 # Deliverable: Container image with non-root user, minimal base
 # Ref: Hackathon Security Requirements
-FROM python:3.11-slim
 
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
@@ -11,9 +11,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
+COPY static ./static
 
 RUN mkdir -p /app/static && chmod -R g+rwX /app/static
-
 RUN chown -R appuser:appgroup /app
 
 USER appuser
