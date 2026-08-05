@@ -1,0 +1,14 @@
+# Deliverable 6: Load balancing across 3 API replicas via kube-proxy
+apiVersion: v1
+kind: Service
+metadata:
+  name: hotelsupply-api-service
+  namespace: hotelsupply
+spec:
+  type: ClusterIP
+  selector:
+    app: hotelsupply-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

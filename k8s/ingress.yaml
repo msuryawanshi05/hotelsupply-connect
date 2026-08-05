@@ -1,0 +1,26 @@
+# Deliverable 9: TLS-terminated Ingress. For OpenShift, replace with Route resource.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hotelsupply-ingress
+  namespace: hotelsupply
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  # Deliverable 9: TLS termination at Ingress
+  tls:
+    - hosts:
+        - hotelsupply.example.com
+      secretName: hotelsupply-tls-secret
+  rules:
+    - host: hotelsupply.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hotelsupply-api-service
+                port:
+                  number: 8000

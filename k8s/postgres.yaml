@@ -1,0 +1,106 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hotelsupply
+---
+# Deliverable 11: Persistent storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: hotelsupply
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Deliverable 9: no plaintext secrets - password comes from Secret
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: hotelsupply
+data:
+  POSTGRES_DB: hotelsupplydb
+  POSTGRES_USER: hotelsupply
+---
+# Deliverable 11: PVC-backed PostgreSQL. Probes: readiness probe using pg_isready, liveness probe using pg_isready, startup probe.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: hotelsupply
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hotelsupply-secrets
+                  key: postgres-password
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "hotelsupply"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "hotelsupply"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          startupProbe:
+            exec:
+              command: ["pg_isready", "-U", "hotelsupply"]
+            failureThreshold: 30
+            periodSeconds: 5
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: hotelsupply
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres

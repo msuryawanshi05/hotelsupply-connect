@@ -1,0 +1,262 @@
+# Deliverable 9: Default-deny all ingress and egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: hotelsupply
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-from-ingress
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: hotelsupply-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app: ingress-nginx
+      ports:
+        - port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress-postgres
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: hotelsupply-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress-matcher
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: hotelsupply-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: matcher
+      ports:
+        - port: 8001
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress-notifier
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: hotelsupply-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: notifier
+      ports:
+        - port: 8002
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-matcher-egress-notifier
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: matcher
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: notifier
+      ports:
+        - port: 8002
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape-api
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: hotelsupply-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress-dns
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: hotelsupply-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+# DNS egress for matcher pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-matcher-egress-dns
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: matcher
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+# DNS egress for notifier pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-notifier-egress-dns
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: notifier
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+# Allow matcher pods to receive requests from API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-matcher-ingress-from-api
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: matcher
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: hotelsupply-api
+      ports:
+        - port: 8001
+---
+# Allow notifier pods to receive requests from API and matcher
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-notifier-ingress-from-api-matcher
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: notifier
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: hotelsupply-api
+        - podSelector:
+            matchLabels:
+              app: matcher
+      ports:
+        - port: 8002
+---
+# Allow postgres to receive connections from API only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-ingress-from-api
+  namespace: hotelsupply
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: hotelsupply-api
+      ports:
+        - port: 5432

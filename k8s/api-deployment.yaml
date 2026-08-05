@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hotelsupply-api
+  namespace: hotelsupply
+spec:
+  # Deliverable 8: 3+ replicas for HA
+  replicas: 3
+  # Deliverable 8: RollingUpdate for zero-downtime
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: hotelsupply-api
+  template:
+    metadata:
+      labels:
+        app: hotelsupply-api
+    spec:
+      # Deliverable 9: least-privilege ServiceAccount
+      serviceAccountName: api-sa
+      # Deliverable 9: non-root, dropped capabilities
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: hotelsupply-api
+          # Deliverable 4: image from GHCR
+          image: ghcr.io/your-org/hotelsupply-api:latest
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 8000
+          # Deliverable 9: secrets not plaintext
+          envFrom:
+            - secretRef:
+                name: hotelsupply-secrets
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: hotelsupply-secrets
+                  key: database-url
+            - name: MATCHER_URL
+              value: http://matcher-service:8001
+            - name: NOTIFIER_URL
+              value: http://notifier-service:8002
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          # Deliverable 10: startup probe on real endpoint
+          startupProbe:
+            httpGet:
+              path: /startupz
+              port: 8000
+            failureThreshold: 30
+            periodSeconds: 5
+          # Deliverable 10: liveness probe
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 0
+            periodSeconds: 15
+            failureThreshold: 3
+          # Deliverable 10: readiness probe
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            failureThreshold: 3

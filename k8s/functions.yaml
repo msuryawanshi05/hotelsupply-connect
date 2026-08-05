@@ -1,0 +1,117 @@
+# Deliverable 5: Event-driven serverless-style function. Replace this Deployment with a Knative Service for true scale-to-zero on OpenShift Serverless.
+# Knative equivalent: apiVersion: serving.knative.dev/v1, kind: Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matcher
+  namespace: hotelsupply
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: matcher
+  template:
+    metadata:
+      labels:
+        app: matcher
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: matcher
+          image: ghcr.io/your-org/hotelsupply-matcher:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 8001
+          env:
+            - name: NOTIFIER_URL
+              value: http://notifier-service:8002
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8001
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: matcher-service
+  namespace: hotelsupply
+spec:
+  type: ClusterIP
+  selector:
+    app: matcher
+  ports:
+    - port: 8001
+      targetPort: 8001
+---
+# Deliverable 5: Event-driven serverless-style function.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifier
+  namespace: hotelsupply
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: notifier
+  template:
+    metadata:
+      labels:
+        app: notifier
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: notifier
+          image: ghcr.io/your-org/hotelsupply-notifier:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 8002
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8002
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifier-service
+  namespace: hotelsupply
+spec:
+  type: ClusterIP
+  selector:
+    app: notifier
+  ports:
+    - port: 8002
+      targetPort: 8002

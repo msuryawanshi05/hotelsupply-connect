@@ -1,0 +1,102 @@
+# HotelSupply Connect — Local Development
+# Deliverable: Local dev environment via docker-compose
+# Usage: docker-compose up --build
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hotelsupplydb
+      POSTGRES_USER: hotelsupply
+      POSTGRES_PASSWORD: localdevpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotelsupply -d hotelsupplydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - hotelsupply-net
+
+  notifier:
+    build:
+      context: ./functions/notifier
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - hotelsupply-net
+
+  matcher:
+    build:
+      context: ./functions/matcher
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - NOTIFIER_URL=http://notifier:8002
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      notifier:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - hotelsupply-net
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://hotelsupply:localdevpassword@postgres:5432/hotelsupplydb
+      - MATCHER_URL=http://matcher:8001
+      - NOTIFIER_URL=http://notifier:8002
+      - SECRET_KEY=local-dev-secret-key-change-in-production
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      matcher:
+        condition: service_healthy
+      notifier:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - hotelsupply-net
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  hotelsupply-net:
+    driver: bridge
