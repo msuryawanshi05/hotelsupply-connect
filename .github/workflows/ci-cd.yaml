@@ -11,6 +11,8 @@ on:
   pull_request:
     branches: [main]
 
+permissions: write-all
+
 env:
   REGISTRY: ghcr.io
 
@@ -44,14 +46,30 @@ jobs:
           NOTIFIER_URL: http://localhost:8002
           SECRET_KEY: test-secret-key-ci
 
-  # ─── Job 2: Build, Scan & Push to GHCR ───────────────────────────────
-  build-scan-push:
-    name: Build, Scan & Push
+  # ─── Job 2: Security Scan with Trivy ─────────────────────────────────
+  scan:
+    name: Vulnerability Scan (Trivy)
     runs-on: ubuntu-latest
     needs: test
-    permissions:
-      contents: read
-      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: table
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  # ─── Job 3: Build & Push to GHCR ─────────────────────────────────────
+  push:
+    name: Build & Push to GHCR
+    runs-on: ubuntu-latest
+    needs: scan
     strategy:
       matrix:
         service:
@@ -86,42 +104,22 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest
 
-      - name: Build image locally for scanning
+      - name: Build and Push ${{ matrix.service.name }}
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.service.context }}
-          load: true
+          push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service.tag }}:latest
-          format: table
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Push Image to GHCR
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ matrix.service.context }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-  # ─── Job 3: Deploy to OpenShift/Kubernetes ───────────────────────────
+  # ─── Job 4: Deploy to OpenShift/Kubernetes ───────────────────────────
   deploy:
     name: Deploy to Cluster
     runs-on: ubuntu-latest
-    needs: build-scan-push
+    needs: push
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.KUBE_CONFIG != ''
-    # Deliverable 3: kubectl apply of K8s manifests
-    # Requires GitHub Secret: KUBE_CONFIG (base64-encoded kubeconfig)
     environment: production
     steps:
       - uses: actions/checkout@v4
