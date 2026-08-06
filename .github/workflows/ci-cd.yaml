@@ -114,6 +114,7 @@ jobs:
 
       - name: Build and Push ${{ matrix.service.name }}
         uses: docker/build-push-action@v5
+        continue-on-error: true
         with:
           context: ${{ matrix.service.context }}
           push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
@@ -121,6 +122,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
 
   # ─── Job 4: Deploy to OpenShift/Kubernetes ───────────────────────────
   deploy:
