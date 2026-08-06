@@ -61,12 +61,13 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          image-ref: '.'
+          scan-ref: '.'
           format: table
           exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+
 
   # ─── Job 3: Build & Push to GHCR ─────────────────────────────────────
   push:
