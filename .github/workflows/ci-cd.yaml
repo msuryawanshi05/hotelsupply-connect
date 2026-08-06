@@ -13,7 +13,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/hotelsupply
 
 jobs:
   # ─── Job 1: Run Tests ────────────────────────────────────────────────
@@ -82,7 +81,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service.tag }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service.tag }}
           tags: |
             type=sha,prefix=
             type=raw,value=latest
@@ -99,7 +98,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service.tag }}:latest
+          image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service.tag }}:latest
           format: table
           exit-code: '0'
           ignore-unfixed: true
