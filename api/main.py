@@ -1,3 +1,5 @@
+# HotelSupply Connect API
+# OpenShift Webhook Trigger Verification
 import os
 import uuid
 import logging
