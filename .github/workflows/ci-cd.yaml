@@ -32,24 +32,18 @@ jobs:
           python-version: '3.11'
           cache: pip
 
-      - name: Install system dependencies for PostgreSQL
-        run: |
-          sudo apt-get update && sudo apt-get install -y libpq-dev
-
       - name: Install API dependencies
         run: |
           cd api
           python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio httpx
-
+          pip install fastapi uvicorn sqlmodel httpx prometheus-fastapi-instrumentator python-jose passlib bcrypt python-multipart pytest pytest-asyncio
 
       - name: Run API tests
         run: |
           cd api
           python -m pytest tests/ -v --tb=short
         env:
-          DATABASE_URL: sqlite:///./test.db
+          DATABASE_URL: sqlite:///:memory:
           MATCHER_URL: http://localhost:8001
           NOTIFIER_URL: http://localhost:8002
           SECRET_KEY: test-secret-key-ci
@@ -66,7 +60,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          scan-ref: '.'
+          image-ref: '.'
           format: table
           exit-code: '0'
           ignore-unfixed: true
@@ -122,7 +116,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
 
   # ─── Job 4: Deploy to OpenShift/Kubernetes ───────────────────────────
   deploy:
