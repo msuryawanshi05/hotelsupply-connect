@@ -32,12 +32,17 @@ jobs:
           python-version: '3.11'
           cache: pip
 
+      - name: Install system dependencies for PostgreSQL
+        run: |
+          sudo apt-get update && sudo apt-get install -y libpq-dev
+
       - name: Install API dependencies
         run: |
           cd api
           python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt || pip install --only-binary=:all: -r requirements.txt
+          pip install -r requirements.txt
           pip install pytest pytest-asyncio httpx
+
 
       - name: Run API tests
         run: |
