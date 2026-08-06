@@ -3,7 +3,7 @@
 html{-webkit-text-size-adjust:100%}
 
 :root, [data-theme="light"] {
-  --color-bg:        #964B00;
+  --color-bg:        #1e1b4b;
   --color-surface:   #ffffff;
   --color-surface-2: #f1f5f9;
   --color-surface-3: #e2e8f0;
