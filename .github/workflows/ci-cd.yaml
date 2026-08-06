@@ -17,7 +17,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/hotelsupply
 
 jobs:
   # ─── Job 1: Run Tests ────────────────────────────────────────────────
@@ -36,7 +35,8 @@ jobs:
       - name: Install API dependencies
         run: |
           cd api
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt || pip install --only-binary=:all: -r requirements.txt
           pip install pytest pytest-asyncio httpx
 
       - name: Run API tests
@@ -78,13 +78,13 @@ jobs:
         service:
           - name: api
             context: api
-            tag: hotelsupply-api
+            image: ghcr.io/msuryawanshi05/hotelsupply-api
           - name: matcher
             context: functions/matcher
-            tag: hotelsupply-matcher
+            image: ghcr.io/msuryawanshi05/hotelsupply-matcher
           - name: notifier
             context: functions/notifier
-            tag: hotelsupply-notifier
+            image: ghcr.io/msuryawanshi05/hotelsupply-notifier
     steps:
       - uses: actions/checkout@v4
 
@@ -102,7 +102,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service.tag }}
+          images: ${{ matrix.service.image }}
           tags: |
             type=sha,prefix=
             type=raw,value=latest
