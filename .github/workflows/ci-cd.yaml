@@ -43,10 +43,11 @@ jobs:
           cd api
           python -m pytest tests/ -v --tb=short
         env:
-          DATABASE_URL: sqlite:///:memory:
-          MATCHER_URL: http://localhost:8001
-          NOTIFIER_URL: http://localhost:8002
-          SECRET_KEY: test-secret-key-ci
+          DATABASE_URL: "sqlite:///:memory:"
+          MATCHER_URL: "http://localhost:8001"
+          NOTIFIER_URL: "http://localhost:8002"
+          SECRET_KEY: "test-secret-key-ci"
+
 
   # ─── Job 2: Security Scan with Trivy ─────────────────────────────────
   scan:
