@@ -170,3 +170,20 @@ jobs:
         run: |
           kubectl get pods -n hotelsupply
           kubectl get hpa -n hotelsupply
+
+  # ─── Job 5: Trigger OpenShift Build ──────────────────────────────────
+  trigger-openshift:
+    name: Trigger OpenShift Build
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.OPENSHIFT_TOKEN != ''
+    steps:
+      - name: Trigger OpenShift Build via API
+        run: |
+          echo "Triggering OpenShift builds for hotelsupply-api..."
+          curl -k -X POST \
+            -H "Authorization: Bearer ${{ secrets.OPENSHIFT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"kind":"BuildRequest","apiVersion":"build.openshift.io/v1","metadata":{"name":"hotelsupply-api"}}' \
+            "https://api.rm1.0a51.p1.openshiftapps.com:6443/apis/build.openshift.io/v1/namespaces/mukul-s-dev/buildconfigs/hotelsupply-api/instantiate"
+
